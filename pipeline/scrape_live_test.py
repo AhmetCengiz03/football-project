@@ -30,7 +30,9 @@ def scrape_live_match(match_identifier: str | int,
     data = res.read()
     data_str = data.decode("utf-8")
 
-    return loads(data_str)
+    if res.status == 200:
+        return loads(data_str)
+    return {"error": "Did not get expected response.", "status": res.status}
 
 
 def write_to_file(filename: str, data: dict) -> None:
@@ -92,7 +94,7 @@ if __name__ == "__main__":
     api_conn = HTTPSConnection("api.sportmonks.com")
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
-    identify_match = "Scotland"
+    identify_match = 19375375
     run_scraper("scrape_output.json", identify_match, api_token, api_conn)
 
     api_conn.close()
