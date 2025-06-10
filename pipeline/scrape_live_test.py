@@ -2,15 +2,15 @@
 
 from os import environ as ENV, path
 from datetime import datetime, timezone
-import json
-import time
-import http.client
+from json import loads, load, dump
+from time import sleep
+from http.client import HTTPSConnection
 
 from dotenv import load_dotenv
 
 
 def scrape_live_match(match_identifier: str | int,
-                      token: str, conn: http.client.HTTPSConnection) -> dict:
+                      token: str, conn: HTTPSConnection) -> dict:
     """Returns a dict of scraped information for a specified match."""
 
     payload = ''
@@ -30,7 +30,7 @@ def scrape_live_match(match_identifier: str | int,
     data = res.read()
     data_str = data.decode("utf-8")
 
-    return json.loads(data_str)
+    return loads(data_str)
 
 
 def write_to_file(filename: str, data: dict) -> None:
@@ -40,14 +40,14 @@ def write_to_file(filename: str, data: dict) -> None:
 
     if not path.exists(filename) or path.getsize(filename) == 0:
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump([data], f, indent=4)
+            dump([data], f, indent=4)
     else:
 
         with open(filename, "r+", encoding="utf-8") as f:
-            file_data = json.load(f)
+            file_data = load(f)
             file_data.append(data)
             f.seek(0)
-            json.dump(file_data, f, indent=4)
+            dump(file_data, f, indent=4)
 
 
 def prepare_data(data: dict) -> dict:
@@ -70,7 +70,7 @@ def prepare_data(data: dict) -> dict:
 
 
 def run_scraper(filename: str, match_identifier: str | int,
-                token: str, conn: http.client.HTTPSConnection):
+                token: str, conn: HTTPSConnection):
     """Runs the scraper every 60 seconds until cancelled."""
 
     scrape_count = 1
@@ -82,14 +82,14 @@ def run_scraper(filename: str, match_identifier: str | int,
         print(data)
         scrape_count += 1
         write_to_file(filename, data)
-        time.sleep(60)
+        sleep(60)
 
 
 if __name__ == "__main__":
 
     load_dotenv()
     api_token = ENV["TOKEN"]
-    api_conn = http.client.HTTPSConnection("api.sportmonks.com")
+    api_conn = HTTPSConnection("api.sportmonks.com")
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
     identify_match = 19375375
