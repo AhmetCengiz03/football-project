@@ -70,7 +70,7 @@ def prepare_data(data: dict) -> dict:
 
 
 def run_scraper(filename: str, match_identifier: str | int,
-                token: str, conn: HTTPSConnection):
+                token: str, conn: HTTPSConnection) -> None:
     """Runs the scraper every 60 seconds until cancelled."""
 
     scrape_count = 1
