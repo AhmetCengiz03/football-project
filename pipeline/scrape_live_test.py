@@ -9,27 +9,23 @@ import http.client
 from dotenv import load_dotenv
 
 
-def scrape_live_by_id(fixture_id: int, token: str, conn: http.client.HTTPSConnection) -> dict:
-    """Returns a dict of scraped information for a given fixture_id."""
+def scrape_live_match(match_identifier: str | int,
+                      token: str, conn: http.client.HTTPSConnection) -> dict:
+    """Returns a dict of scraped information for a specified match."""
 
     payload = ''
     headers = {}
+
+    if isinstance(match_identifier, str):
+        url = f"livescores/inplay?api_token={token}&include=statistics&filters=participantSearch:{match_identifier}"
+    elif isinstance(match_identifier, int):
+        url = f"fixtures/{match_identifier}?api_token={token}"
+    else:
+        raise TypeError(
+            f"{match_identifier} is not a valid string or integer.")
+
     conn.request(
-        "GET", f"/v3/football/fixtures/{fixture_id}?api_token={token}", payload, headers)
-    res = conn.getresponse()
-    data = res.read()
-    data_str = data.decode("utf-8")
-
-    return json.loads(data_str)
-
-
-def scrape_live_by_name(team_name: str, token: str, conn: http.client.HTTPSConnection) -> dict:
-    """Returns a dict of scraped information for a given team name."""
-
-    payload = ''
-    headers = {}
-    conn.request(
-        "GET", f"/v3/football/livescores/inplay?api_token={token}\&include=statistics&filters=participantSearch:{team_name}", payload, headers)
+        "GET", f"/v3/football/{url}", payload, headers)
     res = conn.getresponse()
     data = res.read()
     data_str = data.decode("utf-8")
@@ -73,22 +69,17 @@ def prepare_data(data: dict) -> dict:
     return data
 
 
-def run_scraper(filename: str, specific_team: str | int,
+def run_scraper(filename: str, match_identifier: str | int,
                 token: str, conn: http.client.HTTPSConnection):
     """Runs the scraper every 60 seconds until cancelled."""
 
     scrape_count = 1
+
     while True:
         print(f"Scraping... {scrape_count}")
 
-        if isinstance(specific_team, str):
-            data = scrape_live_by_name(specific_team, token, conn)
-        elif isinstance(specific_team, int):
-            data = scrape_live_by_id(specific_team, token, conn)
-        else:
-            raise TypeError(
-                f"{specific_team} is not a valid string or integer.")
-
+        data = scrape_live_match(match_identifier, token, conn)
+        print(data)
         scrape_count += 1
         write_to_file(filename, data)
         time.sleep(60)
@@ -98,11 +89,10 @@ if __name__ == "__main__":
 
     load_dotenv()
     api_token = ENV["TOKEN"]
-
     api_conn = http.client.HTTPSConnection("api.sportmonks.com")
-    # Replace with a fixture id, or a team name from the game e.g. "Scotland"
-    match_identifier = 19375375
 
-    run_scraper("scrape_output.json", match_identifier, api_token, api_conn)
+    # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
+    identify_match = 19375375
+    run_scraper("scrape_output.json", identify_match, api_token, api_conn)
 
     api_conn.close()
