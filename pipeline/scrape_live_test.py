@@ -57,7 +57,7 @@ def prepare_data(data: dict) -> dict:
     extracted at the time of extraction, and we don't want to write unnecessary keys to 
     our file each time. I've kept this minimal.
     """
-    for dict_key in ["subscription", "timezone"]:
+    for dict_key in ("subscription", "timezone"):
         data.pop(dict_key, None)
 
     if "rate_limit" in data:
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     api_conn = HTTPSConnection("api.sportmonks.com")
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
-    identify_match = 19375375
+    identify_match = "Scotland"
     run_scraper("scrape_output.json", identify_match, api_token, api_conn)
 
     api_conn.close()
