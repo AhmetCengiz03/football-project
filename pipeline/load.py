@@ -8,7 +8,7 @@ from psycopg2.extras import execute_values
 from psycopg2.extensions import connection
 
 
-def get_connection():
+def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
     conn = psycopg2.connect(
         host=ENV("DB_HOST"),
@@ -35,7 +35,7 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> Non
         print(f"Error inserting data: {e}")
 
 
-def upload_all_data(transformed_data: dict[str, pd.DataFrame]):
+def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
     """Upload transformed data to all relevant tables."""
     conn = get_connection()
     for table in [
