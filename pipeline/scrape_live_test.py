@@ -89,11 +89,11 @@ def run_scraper(match_identifier: str | int,
 
     scrape_count = 1
     url = build_scrape_url(match_identifier, token)
-    makedirs(str(match_identifier))
+    makedirs(f"match_{str(match_identifier)}")
 
     while True:
         print(f"Scraping... {scrape_count}")
-        filename = f"{match_identifier}/scrape_{scrape_count}.json"
+        filename = f"match_{match_identifier}/scrape_{scrape_count}.json"
 
         data = scrape_live_match(url, conn)
         scrape_count += 1
