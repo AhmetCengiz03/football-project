@@ -1,3 +1,4 @@
+"""Dashboard run script."""
 import streamlit as st
 
 pages = [
