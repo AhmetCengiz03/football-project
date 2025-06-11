@@ -1,4 +1,4 @@
-"""Dashboard Script."""
+"""Home page."""
 import streamlit as st
 import emoji
 import plotly.graph_objects as go
