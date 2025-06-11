@@ -1,7 +1,7 @@
 # pylint: skip-file
 """Tests for the test_extract.py script."""
 
-import pytest
+from pytest import raises
 from unittest.mock import MagicMock
 
 from extract import prepare_data, build_scrape_url, scrape_live_match
@@ -38,7 +38,7 @@ def test_prepare_data_raises_keyerror():
         "subscription": {"plan": "worldwide"},
         "timezone": "UTC"
     }
-    with pytest.raises(KeyError):
+    with raises(KeyError):
         prepare_data(data)
 
 
@@ -58,7 +58,7 @@ def test_build_url_builds_correctly_with_id():
 
 def test_build_url_type_error_with_bad_type():
 
-    with pytest.raises(TypeError):
+    with raises(TypeError):
         build_scrape_url(["Scotland"], "MYTOKEN")
 
 
