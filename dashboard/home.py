@@ -5,6 +5,7 @@ import numpy as np
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 
+# Temporary data
 matches_data = {
     "Arsenal vs Chelsea": {
         "home_team": "Arsenal",
@@ -29,13 +30,10 @@ if __name__ == "__main__":
 
     st.set_page_config(layout="wide")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
     with col1:
         with st.container():
-
-            st.markdown("<h3 style='text-align: center'>Select Match</h3>",
-                        unsafe_allow_html=True)
 
             # Temporary examples
             selected_match = st.selectbox(
@@ -43,35 +41,34 @@ if __name__ == "__main__":
 
     with col2:
         match_info = matches_data[selected_match]
-        st.markdown("<h2 style='text-align: center'>Score</h2>",
-                    unsafe_allow_html=True)
+
         col2a, col2b, col2c = st.columns(3)
 
         with col2a:
-            st.markdown(f"<h3 style='text-align: left'>{match_info["home_team"]}</h3>",
-                        unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: left'>{match_info["home_logo"]}</h3>",
+            st.markdown(f"<h1 style='text-align: left'>{match_info["home_team"]} {match_info["home_logo"]}</h1>",
                         unsafe_allow_html=True)
 
         with col2b:
-            st.markdown(f"<h3 style='text-align: center'>{match_info["home_score"]} - {match_info["away_score"]}</h3>",
+            st.markdown(f"<h1 style='text-align: center'>{match_info["home_score"]} - {match_info["away_score"]}</h1>",
                         unsafe_allow_html=True)
 
         with col2c:
-            st.markdown(f"<h3 style='text-align: right'>{match_info["away_team"]}</h3>",
-                        unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: right'>{match_info["away_logo"]}</h3>",
+            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]} {match_info["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
     with col3:
-        st.markdown("<h3 style='text-align: center'>Play/Pause</h3>",
-                    unsafe_allow_html=True)
         col2a, col2b, col2c = st.columns(3)
         with col2b:
             if st.button("PLAY/PAUSE GAME"):
                 st.write("Game toggled!")
 
-    st.slider("Minute", min_value=0, max_value=90, step=1)
+    with st.container():
+        st.slider("Minute", min_value=0, max_value=90, step=1)
+
+        num = st.columns(91)
+
+        num[44].write(emoji.emojize(":football:"))
+        num[90].write(emoji.emojize(":blue_circle:"))
 
     # Game momentum/pressure chart
 
@@ -108,3 +105,7 @@ if __name__ == "__main__":
     with col3:
         st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
                     unsafe_allow_html=True)
+
+    num = st.columns(90)
+    for col in num:
+        col.write(emoji.emojize(":blue_circle:"))
