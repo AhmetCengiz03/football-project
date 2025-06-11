@@ -1,10 +1,9 @@
-"""Scraping a live game with the Sportsmonks API."""
+"""Extracting from the Sportsmonks API."""
 
-from os import environ as ENV, path
 from datetime import datetime, timezone
-from json import loads, load, dump
-from time import sleep
 from http.client import HTTPSConnection
+from json import loads
+from os import environ as ENV
 
 from dotenv import load_dotenv
 
@@ -42,21 +41,6 @@ def build_scrape_url(match_identifier: str | int, token: str) -> str:
     return url
 
 
-def write_to_file(filename: str, data: dict) -> None:
-    """Appends scraped data to a json file."""
-
-    if not path.exists(filename) or path.getsize(filename) == 0:
-        with open(filename, 'w', encoding='utf-8') as f:
-            dump([data], f, indent=4)
-    else:
-
-        with open(filename, "r+", encoding="utf-8") as f:
-            file_data = load(f)
-            file_data.append(data)
-            f.seek(0)
-            dump(file_data, f, indent=4)
-
-
 def prepare_data(data: dict) -> dict:
     """
     Removes unwanted keys from our api call and adds info.
@@ -64,6 +48,7 @@ def prepare_data(data: dict) -> dict:
     extracted at the time of extraction, and we don't want to write unnecessary keys to 
     our file each time. I've kept this minimal.
     """
+
     for dict_key in ("subscription", "timezone"):
         data.pop(dict_key, None)
 
@@ -76,27 +61,22 @@ def prepare_data(data: dict) -> dict:
     return data
 
 
-def run_scraper(filename: str, match_identifier: str | int,
+def run_extract(match_identifier: str | int,
                 token: str, conn: HTTPSConnection) -> None:
-    """Runs the scraper every 60 seconds until cancelled."""
+    """Returns the extracted data from the data source."""
 
-    scrape_count = 1
+    now = datetime.now(timezone.utc).timestamp()
     url = build_scrape_url(match_identifier, token)
 
-    while True:
-        print(f"Scraping... {scrape_count}")
+    print(f"Requesting from API at {now}...")
+    data = scrape_live_match(url, conn)
 
-        data = scrape_live_match(url, conn)
-        scrape_count += 1
+    if "error" not in data:
+        data = prepare_data(data)
+    else:
+        data["timestamp"] = now
 
-        if "error" not in data:
-            data = prepare_data(data)
-        else:
-            data["timestamp"] = datetime.now(
-                timezone.utc).timestamp()
-
-        write_to_file(filename, data)
-        sleep(60)
+    return data
 
 
 if __name__ == "__main__":
@@ -107,7 +87,6 @@ if __name__ == "__main__":
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
     identify_match = 19411877
-    run_scraper("scrape_output_test.json",
-                identify_match, api_token, api_conn)
+    run_extract(identify_match, api_token, api_conn)
 
     api_conn.close()
