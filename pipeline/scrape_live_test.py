@@ -23,7 +23,9 @@ def scrape_live_match(url: str, conn: HTTPSConnection) -> dict:
 
     if res.status == 200:
         return loads(data_str)
-    return {"error": "Did not get expected response.", "status": res.status}
+    return {"error": True,
+            "status": res.status,
+            "reason": res.reason}
 
 
 def build_scrape_url(match_identifier: str | int, token: str) -> str:
@@ -42,8 +44,6 @@ def build_scrape_url(match_identifier: str | int, token: str) -> str:
 
 def write_to_file(filename: str, data: dict) -> None:
     """Appends scraped data to a json file."""
-
-    data = prepare_data(data)
 
     if not path.exists(filename) or path.getsize(filename) == 0:
         with open(filename, 'w', encoding='utf-8') as f:
@@ -88,6 +88,13 @@ def run_scraper(filename: str, match_identifier: str | int,
 
         data = scrape_live_match(url, conn)
         scrape_count += 1
+
+        if "error" not in data:
+            data = prepare_data(data)
+        else:
+            data["timestamp"] = datetime.now(
+                timezone.utc).timestamp()
+
         write_to_file(filename, data)
         sleep(60)
 
