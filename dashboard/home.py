@@ -1,8 +1,6 @@
-"""Dashboard Script"""
+"""Dashboard Script."""
 import streamlit as st
 import emoji
-import numpy as np
-import plotly.figure_factory as ff
 import plotly.graph_objects as go
 
 # Temporary data
@@ -45,15 +43,18 @@ if __name__ == "__main__":
         col2a, col2b, col2c = st.columns(3)
 
         with col2a:
-            st.markdown(f"<h1 style='text-align: left'>{match_info["home_team"]} {match_info["home_logo"]}</h1>",
+            st.markdown(f"<h1 style='text-align: left'>{match_info["home_team"]
+                                                        } {match_info["home_logo"]}</h1>",
                         unsafe_allow_html=True)
 
         with col2b:
-            st.markdown(f"<h1 style='text-align: center'>{match_info["home_score"]} - {match_info["away_score"]}</h1>",
+            st.markdown(f"<h1 style='text-align: center'>{match_info["home_score"]
+                                                          } - {match_info["away_score"]}</h1>",
                         unsafe_allow_html=True)
 
         with col2c:
-            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]} {match_info["away_team"]} </h1>",
+            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]
+                                                         } {match_info["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
     with col3:
