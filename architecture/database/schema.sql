@@ -63,7 +63,7 @@ CREATE TABLE match_minute_stats (
     shots_home SMALLINT,
     shots_away SMALLINT,
     shots_on_target_home SMALLINT,
-    shots_on_target_away INT,
+    shots_on_target_away SMALLINT,
     fouls_home SMALLINT,
     fouls_away SMALLINT,
     corners_home SMALLINT,
