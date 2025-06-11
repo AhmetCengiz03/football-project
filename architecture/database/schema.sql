@@ -44,8 +44,7 @@ CREATE TABLE match_assignment (
     PRIMARY KEY (match_assignment_id),
     FOREIGN KEY (match_id) REFERENCES match(match_id),
     FOREIGN KEY (competition_id) REFERENCES competition(competition_id),
-    FOREIGN KEY (season_id) REFERENCES season(season_id)
-    
+    FOREIGN KEY (season_id) REFERENCES season(season_id)  
 );
 
 CREATE TABLE event_type (
