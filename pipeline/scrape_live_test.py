@@ -9,20 +9,11 @@ from http.client import HTTPSConnection
 from dotenv import load_dotenv
 
 
-def scrape_live_match(match_identifier: str | int,
-                      token: str, conn: HTTPSConnection) -> dict:
+def scrape_live_match(url: str, conn: HTTPSConnection) -> dict:
     """Returns a dict of scraped information for a specified match."""
 
     payload = ''
     headers = {}
-
-    if isinstance(match_identifier, str):
-        url = f"livescores/inplay?api_token={token}&include=statistics&filters=participantSearch:{match_identifier}"
-    elif isinstance(match_identifier, int):
-        url = f"fixtures/{match_identifier}?api_token={token}"
-    else:
-        raise TypeError(
-            f"{match_identifier} is not a valid string or integer.")
 
     conn.request(
         "GET", f"/v3/football/{url}", payload, headers)
@@ -33,6 +24,20 @@ def scrape_live_match(match_identifier: str | int,
     if res.status == 200:
         return loads(data_str)
     return {"error": "Did not get expected response.", "status": res.status}
+
+
+def build_scrape_url(match_identifier: str | int, token: str) -> str:
+    """Returns the url required based on the given identifier."""
+
+    if isinstance(match_identifier, str):
+        url = f"livescores/inplay?api_token={token}&include=statistics;periods;comments&filters=participantSearch:{match_identifier}"
+    elif isinstance(match_identifier, int):
+        url = f"fixtures/{match_identifier}?api_token={token}"
+    else:
+        raise TypeError(
+            f"{match_identifier} is not a valid string or integer.")
+
+    return url
 
 
 def write_to_file(filename: str, data: dict) -> None:
@@ -76,12 +81,12 @@ def run_scraper(filename: str, match_identifier: str | int,
     """Runs the scraper every 60 seconds until cancelled."""
 
     scrape_count = 1
+    url = build_scrape_url(match_identifier, token)
 
     while True:
         print(f"Scraping... {scrape_count}")
 
-        data = scrape_live_match(match_identifier, token, conn)
-        print(data)
+        data = scrape_live_match(url, conn)
         scrape_count += 1
         write_to_file(filename, data)
         sleep(60)
@@ -94,7 +99,8 @@ if __name__ == "__main__":
     api_conn = HTTPSConnection("api.sportmonks.com")
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
-    identify_match = 19375375
-    run_scraper("scrape_output.json", identify_match, api_token, api_conn)
+    identify_match = 19411877
+    run_scraper("scrape_output_test.json",
+                identify_match, api_token, api_conn)
 
     api_conn.close()
