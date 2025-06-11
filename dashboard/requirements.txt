@@ -1,3 +1,7 @@
 pylint
 pytest
 pytest-cov
+streamlit
+plotly
+numpy
+scipy
