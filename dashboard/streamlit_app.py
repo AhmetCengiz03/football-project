@@ -23,6 +23,5 @@ with st.sidebar.container(height=310):
         st.page_link("home.py", label="Home", icon=":material/home:")
         st.write("Welcome to the home page!")
         st.write(
-            "Select a page from above. This sidebar thumbnail shows a subset of "
-            "elements from each page so you can see the sidebar theme."
+            "Select a page from above."
         )
