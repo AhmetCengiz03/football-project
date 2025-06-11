@@ -61,14 +61,14 @@ def prepare_data(data: dict) -> dict:
     return data
 
 
-def run_scraper(match_identifier: str | int,
+def run_extract(match_identifier: str | int,
                 token: str, conn: HTTPSConnection) -> None:
-    """Runs the scraper every 60 seconds until cancelled."""
+    """Returns the extracted data from the data source."""
 
     now = datetime.now(timezone.utc).timestamp()
     url = build_scrape_url(match_identifier, token)
 
-    print(f"Scraping at {now}...")
+    print(f"Requesting from API at {now}...")
     data = scrape_live_match(url, conn)
 
     if "error" not in data:
@@ -87,6 +87,6 @@ if __name__ == "__main__":
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
     identify_match = 19411877
-    run_scraper(identify_match, api_token, api_conn)
+    run_extract(identify_match, api_token, api_conn)
 
     api_conn.close()
