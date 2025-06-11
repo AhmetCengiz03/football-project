@@ -105,7 +105,3 @@ if __name__ == "__main__":
     with col3:
         st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
                     unsafe_allow_html=True)
-
-    num = st.columns(90)
-    for col in num:
-        col.write(emoji.emojize(":blue_circle:"))
