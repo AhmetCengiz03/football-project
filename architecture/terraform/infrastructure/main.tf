@@ -4,6 +4,24 @@ provider "aws" {
     secret_key = var.AWS_SECRET_KEY
 }
 
+data "aws_vpc" "current-vpc" {
+    id = var.CURRENT_VPC_ID
+}
+
+data "aws_iam_policy" "cloudwatch_full_access" {
+    arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+}
+
+data "aws_iam_policy" "ecr_full_access" {
+    arn = "arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicFullAccess"
+}
+
+data "aws_iam_policy" "RDS_full_access" {
+    arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
+
+
 # RDS
 resource "aws_security_group" "db-security-group" {
     name = "museum-db-sg"
@@ -64,16 +82,3 @@ data "aws_ecr_image" "scheduler_stopper_image" {
     repository_name = "c17-football-scheduler-stopper-ecr"
     image_tag = "latest"
 }
-
-data "aws_vpc" "current-vpc" {
-    id = "vpc-00b3f6b2893c390f2"
-}
-
-data "aws_iam_policy" "cloudwatch_full_access" {
-    arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-}
-
-data "aws_iam_policy" "ecr_full_access" {
-    arn = "arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicFullAccess"
-}
-
