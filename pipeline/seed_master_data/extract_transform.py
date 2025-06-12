@@ -7,6 +7,7 @@ from typing import Dict, Tuple, List
 from http.client import HTTPSConnection
 from json import loads
 from os import environ as ENV
+from dotenv import load_dotenv
 
 
 def get_db_connection() -> psycopg2.extensions.connection:
@@ -104,6 +105,7 @@ def get_entity_name_if_exists(cur, table: str, entity_id: int, id_col: str, name
 
 def validate_and_transform_data(event: Dict) -> Dict:
     """Validates and extracts structured match data from the event."""
+    load_dotenv()
     validate_required_values(event)
     validate_timestamp(event["start_time"])
 
@@ -131,7 +133,7 @@ def validate_and_transform_data(event: Dict) -> Dict:
         cur, "season", season_id, "season_id", "season_name")
     insert_season = False
     if not season_name:
-        season_name = fetch_entity_name_from_api("season", season_id)
+        season_name = fetch_entity_name_from_api("seasons", season_id)
         insert_season = True
 
     insert_home_team = False
