@@ -150,10 +150,10 @@ def drop_unwanted_stats(df: pd.DataFrame) -> pd.DataFrame:
     columns_to_remove = [
         "accurate_crosses_away",
         "accurate_crosses_home",
-        "ball_posesession_away",
+        "ball_possession_away",
         "big_chances_created_away",
         "big_chances_created_home",
-        "big_chances_misses_away",
+        "big_chances_missed_away",
         "big_chances_missed_home",
         "dribbled_attempts_away",
         "dribbled_attempts_home",
@@ -163,6 +163,8 @@ def drop_unwanted_stats(df: pd.DataFrame) -> pd.DataFrame:
         "free_kicks_home",
         "goal_attempts_away",
         "goal_attempts_home",
+        "goal_kicks_away",
+        "goal_kicks_home",
         "interceptions_away",
         "interceptions_home",
         "long_passes_away",
@@ -186,6 +188,31 @@ def drop_unwanted_stats(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop(columns=columns_to_remove, errors="ignore")
 
 
+def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Runs the transformation process."""
+
+    df = drop_bulk_columns(df)
+    df_match_event = get_match_event_df(df)
+
+    df_stats = append_period_to_statistics(df, get_statistics(df))
+
+    df_minute = create_match_minute_df(
+        df_stats, get_type_mapping("types_map_api.xlsx"))
+
+    df_minute = drop_unwanted_stats(df_minute)
+    df_minute = df_minute.rename(columns={
+        "ball_possession_home": "possession_home",
+        "shots_insidebox_home": "shots_inside_home",
+        "shots_insidebox_away": "shots_inside_away",
+        "shots_outsidebox_home": "shots_outside_home",
+        "shots_outsidebox_away": "shots_outside_away",
+        "shots_total_home": "shots_home",
+        "shots_total_away": "shots_away"
+    })
+
+    return df_minute, df_match_event
+
+
 if __name__ == "__main__":
 
     load_dotenv()
@@ -194,22 +221,12 @@ if __name__ == "__main__":
     # api_conn = HTTPSConnection("api.sportmonks.com")
     # identify_match = 19411877
     # api_data = run_extract(identify_match, api_token, api_conn)
-    # df = get_dataframe_from_response(api_data)
+    # base_df = get_dataframe_from_response(api_data)
 
-    df = get_dataframe_from_json("match_scrapes/scrape_100.json")
-    df['request_timestamp'] = datetime.now(
+    base_df = get_dataframe_from_json("match_scrapes/scrape_100.json")
+    base_df['request_timestamp'] = datetime.now(
         timezone.utc).timestamp()  # temporary, to act as live data will
 
-    df = drop_bulk_columns(df)
+    transform_data(base_df)
 
-    stats = get_statistics(df)
-    df_stats = append_period_to_statistics(df, stats)
-
-    df_match_event = get_match_event_df(df)
     # api_conn.close()
-
-    df_minute = create_match_minute_df(
-        df_stats, get_type_mapping("types_map_api.xlsx"))
-
-    df_minute = drop_unwanted_stats(df_minute)
-    print(df_minute.info())
