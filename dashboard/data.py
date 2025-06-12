@@ -21,8 +21,18 @@ def get_connection() -> connection:
     )
 
 
+def execute_query(query: str, params=None) -> pd.DataFrame:
+    """Execute query and handle the connection/cursor."""
+    conn = get_connection()
+    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        cursor.execute(query, params or [])
+        records = cursor.fetchall()
+        all_matches = pd.DataFrame(records)
+    return all_matches
+
+
 @st.cache_data
-def get_all_matches(conn: connection) -> pd.DataFrame:
+def get_all_matches() -> pd.DataFrame:
     """Get all matches for the dropdown."""
     query = """
             SELECT m.match_id, m.match_date,
@@ -37,55 +47,39 @@ def get_all_matches(conn: connection) -> pd.DataFrame:
             JOIN competition c ON ma.competition_id = c.competition_id
             JOIN season s ON ma.season_id = s.season_id
             """
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        cursor.execute(query)
-        records = cursor.fetchall()
-        all_matches = pd.DataFrame(records)
-    return all_matches
+    return execute_query(query)
 
 
 @st.cache_data
-def get_event_data_for_selected_match(match_id: int, conn: connection) -> pd.DataFrame:
+def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all event data for the selected match."""
     query = """
-                SELECT ct me.*, et.type_name
+                SELECT me.*, et.type_name
                 FROM match_event me
                 JOIN event_type et
                 ON me.event_type_id = et.event_type_id
                 WHERE me.match_id = %s
                  """
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        cursor.execute(query, (match_id,))
-        records = cursor.fetchall()
-        event_data = pd.DataFrame(records)
-    return event_data
+    return execute_query(query, match_id)
 
 
 @st.cache_data
-def get_all_stats_for_selected_match(match_id: int, conn: connection) -> pd.DataFrame:
+def get_all_stats_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all the stats data for the selected match."""
     query = """
             SELECT *
             FROM match_minute_stats 
             WHERE match_id = %s
             """
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        cursor.execute(query, (match_id,))
-        records = cursor.fetchall()
-        stats_data = pd.DataFrame(records)
-    return stats_data
+    return execute_query(query, match_id)
 
 
 @st.cache_data
-def get_match_info_for_selected_match(match_id: int, conn: connection) -> pd.DataFrame:
+def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all the match info for the selected match."""
     query = """
             SELECT * 
             FROM match
             WHERE match_id = %s
             """
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        cursor.execute(query, (match_id,))
-        records = cursor.fetchall()
-        info_data = pd.DataFrame(records)
-    return info_data
+    return execute_query(query, match_id)
