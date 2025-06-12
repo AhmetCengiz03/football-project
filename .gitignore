@@ -102,3 +102,4 @@ __pycache__
 *.json
 match_*/
 .coverage
+*.xlsx

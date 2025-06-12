@@ -34,10 +34,12 @@ def get_dataframe_from_json(file_path: str) -> pd.DataFrame:
     return get_dataframe_from_response(data)
 
 
-def drop_columns(df: pd.DataFrame) -> pd.DataFrame:
+def drop_bulk_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Drops unnecessary columns from the extracted data."""
 
     columns_to_remove = [
+        "league_id",
+        "season_id",
         "sport_id",
         "stage_id",
         "group_id",
@@ -113,6 +115,77 @@ def get_match_event_df(df: pd.DataFrame) -> pd.DataFrame:
     return df_comments.drop(columns=['id', 'fixture_id'], errors="ignore")
 
 
+def get_type_mapping(file_path: str) -> pd.DataFrame:
+    """Returns a mapping of type_id to its statistic."""
+
+    df_mapping = pd.read_excel(file_path)
+
+    df_mapping = df_mapping.drop(
+        columns=['parent_id', 'code', "name", "model_type", "group", "stat_group"], errors="ignore")
+    df_mapping.columns = ["type_id", "statistic_name"]
+
+    return df_mapping
+
+
+def create_match_minute_df(df_stats: pd.DataFrame, df_map: pd.DataFrame) -> pd.DataFrame:
+    """Returns the match_minute DataFrame resembling our ERD."""
+
+    df_stats = df_stats.merge(df_map, on="type_id", how="left")
+    df_stats["statistic_name"] = df_stats["statistic_name"] + \
+        df_stats["location"].map({"home": "_home", "away": "_away"})
+
+    df_minute = df_stats.pivot_table(
+        index=["match_id", "match_minute", "half"],
+        columns="statistic_name",
+        values="data.value"
+    ).reset_index()
+
+    df_minute.columns = df_minute.columns.str.lower()
+    return df_minute
+
+
+def drop_unwanted_stats(df: pd.DataFrame) -> pd.DataFrame:
+    """Drops stats not necessary to our design."""
+
+    columns_to_remove = [
+        "accurate_crosses_away",
+        "accurate_crosses_home",
+        "ball_posesession_away",
+        "big_chances_created_away",
+        "big_chances_created_home",
+        "big_chances_misses_away",
+        "big_chances_missed_home",
+        "dribbled_attempts_away",
+        "dribbled_attempts_home",
+        "duels_won_away",
+        "duels_won_home",
+        "free_kicks_away",
+        "free_kicks_home",
+        "goal_attempts_away",
+        "goal_attempts_home",
+        "interceptions_away",
+        "interceptions_home",
+        "long_passes_away",
+        "long_passes_home",
+        "shots_blocked_away",
+        "shots_blocked_home",
+        "shots_off_target_away",
+        "shots_off_target_home",
+        "successful_dribbles_percentage_away",
+        "successful_dribbles_percentage_home",
+        "successful_dribbles_away",
+        "successful_dribbles_home",
+        "successful_passes_percentage_home",
+        "successful_passes_percentage_away",
+        "throwins_away",
+        "throwins_home",
+        "total_crosses_away",
+        "total_crosses_home"
+    ]
+
+    return df.drop(columns=columns_to_remove, errors="ignore")
+
+
 if __name__ == "__main__":
 
     load_dotenv()
@@ -127,13 +200,16 @@ if __name__ == "__main__":
     df['request_timestamp'] = datetime.now(
         timezone.utc).timestamp()  # temporary, to act as live data will
 
-    df = drop_columns(df)
-    print(df.info())
+    df = drop_bulk_columns(df)
 
     stats = get_statistics(df)
     df_stats = append_period_to_statistics(df, stats)
-    print(df_stats)
 
     df_match_event = get_match_event_df(df)
-    print(df_match_event)
     # api_conn.close()
+
+    df_minute = create_match_minute_df(
+        df_stats, get_type_mapping("types_map_api.xlsx"))
+
+    df_minute = drop_unwanted_stats(df_minute)
+    print(df_minute.info())
