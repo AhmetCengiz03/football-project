@@ -75,7 +75,6 @@ def get_active_period(periods: list[dict]) -> dict:
     """Returns the current period that is in play."""
 
     for period in periods:
-        print(period)
         if period.get("ticking", False):
             return period
 
@@ -126,7 +125,7 @@ def get_type_mapping(file_path: str) -> pd.DataFrame:
     df_mapping = pd.read_excel(file_path)
 
     df_mapping = df_mapping.drop(
-        columns=['parent_id', 'code', "name", "model_type", "group", "stat_group"], errors="ignore")
+        columns=["parent_id", "code", "name", "model_type", "group", "stat_group"], errors="ignore")
     df_mapping.columns = ["type_id", "statistic_name"]
 
     return df_mapping
@@ -136,7 +135,6 @@ def create_match_minute_df(df_stats: pd.DataFrame, df_map: pd.DataFrame) -> pd.D
     """Returns the match_minute DataFrame resembling our ERD."""
 
     df_stats = df_stats.merge(df_map, on="type_id", how="left")
-    print(df_stats)
     df_stats["statistic_name"] = df_stats["statistic_name"] + \
         df_stats["location"].map({"home": "_home", "away": "_away"})
 
