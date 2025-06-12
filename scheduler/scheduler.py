@@ -1,4 +1,4 @@
-"""Scheduler that runs daily to create schedules for today's matches."""
+"""Scheduler that runs daily to create schedules for tomorrow's matches."""
 from os import environ as ENV
 from json import loads, dumps
 import logging
@@ -92,8 +92,8 @@ def manage_schedule_groups(scheduler_client: client, current_group: str) -> None
         logging.info("Schedule group %s already exists", current_group)
 
     try:
-        current_date = datetime.now().strftime('%Y-%m-%d')
-        tomorrow_date = (datetime.now() + timedelta(days=1)
+        current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        tomorrow_date = (datetime.now(timezone.utc) + timedelta(days=1)
                          ).strftime('%Y-%m-%d')
         keep_groups = {f"c17-football-{current_date}-fixtures",
                        f"c17-football-{tomorrow_date}-fixtures"}
@@ -161,7 +161,7 @@ def process_daily_schedules(config: dict) -> dict:
     """Main processing function."""
     configure_logger()
 
-    tomorrow_date = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+    tomorrow_date = (datetime.now(timezone.utc) + timedelta(days=1)).strftime('%Y-%m-%d')
     group_name = f"c17-football-{tomorrow_date}-fixtures"
 
     scheduler_client = client("scheduler",
