@@ -1,0 +1,139 @@
+"""Transform data for upload to our database."""
+
+from os import environ as ENV
+from http.client import HTTPSConnection
+from json import load
+from datetime import datetime, timezone
+
+import pandas as pd
+from dotenv import load_dotenv
+
+from extract import run_extract
+
+
+def get_dataframe_from_response(data: dict) -> pd.DataFrame:
+    """Returns a pandas DataFrame if data is valid."""
+
+    if 'data' not in data:
+        raise ValueError("API Response missing 'data' key.")
+
+    if isinstance(data["data"], dict):
+        return pd.DataFrame([data["data"]])
+
+    if isinstance(data["data"], list):
+        return pd.DataFrame(data["data"])
+
+    raise TypeError(f"'data' key is of unexpected type: {type(data["data"])}.")
+
+
+def get_dataframe_from_json(file_path: str) -> pd.DataFrame:
+    """Returns a pandas DataFrame for a valid json file path."""
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = load(f)
+    return get_dataframe_from_response(data)
+
+
+def drop_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Drops unnecessary columns from the extracted data."""
+
+    columns_to_remove = [
+        "sport_id",
+        "stage_id",
+        "group_id",
+        "aggregate_id",
+        "round_id",
+        "state_id",
+        "venue_id",
+        "name",
+        "starting_at",
+        "leg",
+        "details",
+        "length",
+        "placeholder",
+        "has_odds",
+        "has_premium_odds",
+        "starting_at_timestamp",
+    ]
+
+    return df.drop(columns=columns_to_remove, errors="ignore")
+
+
+def get_statistics(df: pd.DataFrame) -> pd.DataFrame:
+    """Gets the statistics rows and returns them as a DataFrame."""
+
+    match_id = df.at[0, "id"]
+    df_stats = pd.json_normalize(df["statistics"].iloc[0])
+    df_stats["match_id"] = match_id
+
+    return df_stats
+
+
+def get_active_period(periods: list[dict]) -> dict:
+    """Returns the current period that is in play."""
+
+    for period in periods:
+        if period.get("ticking", False):
+            return period
+
+    return None
+
+
+def get_period_information(df: pd.DataFrame) -> tuple[bool, int, int]:
+    """Returns the minute and half"""
+
+    periods = df.at[0, "periods"]
+    active_period = get_active_period(periods)
+
+    ticking = active_period.get("ticking", False)
+    type_id = active_period.get("type_id", -1)
+    minute = active_period.get("minutes", -1)
+
+    return (ticking, type_id, minute)
+
+
+def append_period_to_statistics(df: pd.DataFrame, df_stats: pd.DataFrame) -> pd.DataFrame:
+    """Returns a statistics dataframe with period information."""
+
+    ticking, type_id, minute = get_period_information(df)
+    df_stats["half_live"] = ticking
+    df_stats["half"] = type_id
+    df_stats["match_minute"] = minute
+
+    return df_stats.drop(columns=['id', 'fixture_id'], errors="ignore")
+
+
+def get_match_event_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Returns the DataFrame for the match_event table."""
+
+    comments = df.at[0, "comments"]
+    # Should we tag with current timestamp here, or timestamp of API call?
+
+    df_comments = pd.DataFrame(comments)
+    return df_comments.drop(columns=['id', 'fixture_id'], errors="ignore")
+
+
+if __name__ == "__main__":
+
+    load_dotenv()
+
+    # api_token = ENV["TOKEN"]
+    # api_conn = HTTPSConnection("api.sportmonks.com")
+    # identify_match = 19411877
+    # api_data = run_extract(identify_match, api_token, api_conn)
+    # df = get_dataframe_from_response(api_data)
+
+    df = get_dataframe_from_json("match_scrapes/scrape_100.json")
+    df['request_timestamp'] = datetime.now(
+        timezone.utc).timestamp()  # temporary, to act as live data will
+
+    df = drop_columns(df)
+    print(df.info())
+
+    stats = get_statistics(df)
+    df_stats = append_period_to_statistics(df, stats)
+    print(df_stats)
+
+    df_match_event = get_match_event_df(df)
+    print(df_match_event)
+    # api_conn.close()

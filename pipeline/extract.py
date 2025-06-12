@@ -53,7 +53,7 @@ def prepare_data(data: dict) -> dict:
         data.pop(dict_key, None)
 
     if "rate_limit" in data:
-        data["rate_limit"]["timestamp"] = datetime.now(
+        data["data"]["request_timestamp"] = datetime.now(
             timezone.utc).timestamp()
     else:
         raise KeyError("rate_limit not in data.")
@@ -62,7 +62,7 @@ def prepare_data(data: dict) -> dict:
 
 
 def run_extract(match_identifier: str | int,
-                token: str, conn: HTTPSConnection) -> None:
+                token: str, conn: HTTPSConnection) -> dict:
     """Returns the extracted data from the data source."""
 
     now = datetime.now(timezone.utc).timestamp()
@@ -74,7 +74,7 @@ def run_extract(match_identifier: str | int,
     if "error" not in data:
         data = prepare_data(data)
     else:
-        data["timestamp"] = now
+        data["request_timestamp"] = now
 
     return data
 
