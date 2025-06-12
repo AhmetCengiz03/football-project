@@ -25,10 +25,10 @@ def connect_to_scheduler_client(config: dict) -> client:
 
 def get_all_daily_fixtures(conn: HTTPSConnection, config: dict) -> dict:
     """Get the fixtures happening today."""
-    date = datetime.now().strftime('%Y-%m-%d')
+    date = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
     conn.request(
-        "GET", f"/v3/football/fixtures/date/{
-            date}?api_token={config["API_KEY"]}&include=participants")
+        "GET", f"/v3/football/fixtures/date/{date}?api_token={config[
+            "API_KEY"]}&include=participants")
     res = conn.getresponse()
     data = res.read()
     data_str = data.decode("utf-8")
@@ -93,10 +93,10 @@ def manage_schedule_groups(scheduler_client: client, current_group: str) -> None
 
     try:
         current_date = datetime.now().strftime('%Y-%m-%d')
-        yesterday_date = (datetime.now() - timedelta(days=1)
-                          ).strftime('%Y-%m-%d')
+        tomorrow_date = (datetime.now() + timedelta(days=1)
+                         ).strftime('%Y-%m-%d')
         keep_groups = {f"c17-football-{current_date}-fixtures",
-                       f"c17-football-{yesterday_date}-fixtures"}
+                       f"c17-football-{tomorrow_date}-fixtures"}
 
         paginator = scheduler_client.get_paginator("list_schedule_groups")
         for page in paginator.paginate():
@@ -161,8 +161,8 @@ def process_daily_schedules(config: dict) -> dict:
     """Main processing function."""
     configure_logger()
 
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    group_name = f"c17-football-{current_date}-fixtures"
+    tomorrow_date = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+    group_name = f"c17-football-{tomorrow_date}-fixtures"
 
     scheduler_client = client("scheduler",
                               aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
@@ -201,4 +201,4 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
     load_dotenv()
     result = process_daily_schedules(ENV)
-    print(result["matches"])
+    # print(result["matches"])
