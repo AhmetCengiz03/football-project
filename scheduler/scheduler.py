@@ -25,7 +25,8 @@ def connect_to_scheduler_client(config: dict) -> client:
 
 def get_all_daily_fixtures(conn: HTTPSConnection, config: dict) -> dict:
     """Get the fixtures happening tomorrow."""
-    date = (datetime.now(timezone.utc) + timedelta(days=1)).strftime('%Y-%m-%d')
+    date = (datetime.now(timezone.utc) +
+            timedelta(days=1)).strftime('%Y-%m-%d')
     conn.request(
         "GET", f"/v3/football/fixtures/date/{date}?api_token={config[
             "API_KEY"]}&include=participants")
@@ -107,10 +108,10 @@ def manage_schedule_groups(scheduler_client: client, current_group: str) -> None
 
 
 def format_team_codes(team_1: str, team_2: str) -> str:
-    """Format team codes for schedule name."""
-    team_1_raw = team_1["team_1_code"] or team_1.get(
+    """Format team names for schedule name."""
+    team_1_raw = team_1.get(
         "team_1_name", "unknown")
-    team_2_raw = team_2["team_2_code"] or team_2.get(
+    team_2_raw = team_2.get(
         "team_2_name", "unknown")
 
     team_1_clean = sub(r'[^a-zA-Z0-9]', '', team_1_raw).lower()
@@ -155,7 +156,8 @@ def process_daily_schedules(config: dict) -> dict:
     """Main processing function."""
     configure_logger()
 
-    tomorrow_date = (datetime.now(timezone.utc) + timedelta(days=1)).strftime('%Y-%m-%d')
+    tomorrow_date = (datetime.now(timezone.utc) +
+                     timedelta(days=1)).strftime('%Y-%m-%d')
     group_name = f"c17-football-{tomorrow_date}-fixtures"
 
     scheduler_client = client("scheduler",
