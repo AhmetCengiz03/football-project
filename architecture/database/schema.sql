@@ -99,7 +99,7 @@ CREATE TABLE match_event (
     match_event_id INT NOT NULL,
     minute_stat_id INT NOT NULL,
     event_type_id SMALLINT,
-    team_id SMALLINT
+    team_id SMALLINT,
     PRIMARY KEY (match_event_id),
     FOREIGN KEY (minute_stat_id) REFERENCES match_minute_stats(minute_stat_id),
     FOREIGN KEY (event_type_id) REFERENCES event_type(event_type_id),
