@@ -75,10 +75,15 @@ def get_active_period(periods: list[dict]) -> dict:
     """Returns the current period that is in play."""
 
     for period in periods:
+        print(period)
         if period.get("ticking", False):
             return period
 
-    return periods[1]
+    for period in reversed(periods):
+        if 'started' in period:
+            return period
+
+    return periods[-1]
 
 
 def get_period_information(df: pd.DataFrame) -> tuple[bool, int, int]:
@@ -109,7 +114,7 @@ def get_match_event_df(df: pd.DataFrame) -> pd.DataFrame:
     """Returns the DataFrame for the match_event table."""
 
     comments = df.at[0, "comments"]
-    # Should we tag with current timestamp here, or timestamp of API call?
+    # This needs reworking with live game event data.
 
     df_comments = pd.DataFrame(comments)
     return df_comments.drop(columns=['id', 'fixture_id'], errors="ignore")
