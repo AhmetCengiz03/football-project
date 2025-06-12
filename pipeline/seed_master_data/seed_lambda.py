@@ -1,22 +1,32 @@
+import json
+import logging
+from extract_transform import validate_and_transform_data
+from load_data import load_master_data
 
-from extract_transform import validate_match_master_data
-from load_master import load_master_data
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
+    """Lambda entry point for processing and storing match master data."""
 
     try:
-        cleaned_metadata = validate_match_master_data(event)
+        logger.info("Received match info: %s", json.dumps(event))
 
-        result = load_master_data(cleaned_metadata)
+        transformed_data = validate_and_transform_data(event)
+        logger.info("Transformed data: %s", transformed_data)
+
+        load_master_data(transformed_data)
+        logger.info("Data loaded successfully.")
 
         return {
-            "status": "success",
-            "details": result
+            "statusCode": 200,
+            "body": json.dumps({
+                "message": "Initial match data processed and inserted successfully.",
+                "match_id": transformed_data["match_id"]
+            })
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        logger.error("Insert master data pipeline failed: %s", str(e))
+        raise RuntimeError("Error at runtime.")

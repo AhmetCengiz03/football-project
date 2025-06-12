@@ -1,3 +1,6 @@
+"""Script that validates the received dictionary, 
+checks if any of the data already exists in the RDS 
+otherwise fetches the relevant data from the API."""
 import psycopg2
 from datetime import datetime, timezone
 from typing import Dict, Tuple, List
@@ -118,15 +121,21 @@ def validate_and_transform_data(event: Dict) -> Dict:
 
     competition_name = get_entity_name_if_exists(
         cur, "competition", competition_id, "competition_id", "competition_name")
+    insert_competition = False
     if not competition_name:
         competition_name = fetch_entity_name_from_api(
             "leagues", competition_id)
+        insert_competition = True
 
     season_name = get_entity_name_if_exists(
         cur, "season", season_id, "season_id", "season_name")
+    insert_season = False
     if not season_name:
         season_name = fetch_entity_name_from_api("season", season_id)
+        insert_season = True
 
+    insert_home_team = False
+    insert_away_team = False
     for team in [home_team, away_team]:
         team_prefix = "team_1" if "team_1_team_id" in team else "team_2"
         team_id = int(team[f"{team_prefix}_team_id"])
@@ -136,7 +145,11 @@ def validate_and_transform_data(event: Dict) -> Dict:
         if not team_name:
             team_name = fetch_entity_name_from_api(
                 "teams", team_id)
-            team[f"{team_prefix}_name"] = team_name
+        team[f"{team_prefix}_name"] = team_name
+        if team is home_team:
+            insert_home_team = True
+        else:
+            insert_away_team = True
     cur.close()
     conn.close()
 
@@ -148,5 +161,9 @@ def validate_and_transform_data(event: Dict) -> Dict:
         "season_id": season_id,
         "season_name": season_name,
         "home_team": extract_team_info(home_team),
-        "away_team": extract_team_info(away_team)
+        "away_team": extract_team_info(away_team),
+        "insert_competition": insert_competition,
+        "insert_season": insert_season,
+        "insert_home_team": insert_home_team,
+        "insert_away_team": insert_away_team
     }
