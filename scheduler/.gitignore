@@ -93,7 +93,6 @@ __pycache__
 .pytest_cache
 
 *.csv
-.csv
 
 .terraform*
 *.tfstate
