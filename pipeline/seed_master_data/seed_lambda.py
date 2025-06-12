@@ -1,5 +1,5 @@
 
-from validator import validate_match_master_data
+from extract_transform import validate_match_master_data
 from load_master import load_master_data
 
 
