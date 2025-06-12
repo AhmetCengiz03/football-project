@@ -41,41 +41,36 @@ def get_all_daily_fixtures(conn: HTTPSConnection, config: dict) -> dict:
             "reason": res.reason}
 
 
+def extract_team_data(team: dict, prefix: str) -> dict:
+    """Extracts team info with a given prefix."""
+    return {
+        f"{prefix}_team_id": team["id"],
+        f"{prefix}_name": team["name"],
+        f"{prefix}_code": team["short_code"],
+        f"{prefix}_image": team["image_path"],
+        f"{prefix}_location": team["meta"]["location"]
+    }
+
+
+def get_single_fixture(fixture: dict) -> dict:
+    """Gets a single fixture and extracts relevant data."""
+    team_1 = extract_team_data(fixture["participants"][0], "team_1")
+    team_2 = extract_team_data(fixture["participants"][1], "team_2")
+
+    return {
+        "match_id": fixture["id"],
+        "league_id": fixture["league_id"],
+        "season_id": fixture["season_id"],
+        "fixture_name": fixture["name"],
+        "start_time": fixture["starting_at"],
+        "team_data": [team_1, team_2]
+    }
+
+
 def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
     """Get today's fixtures and extract relevant data."""
-
-    data = get_all_daily_fixtures(conn, config)
-    matches_info = []
-    for fixture in data:
-        team_1_data = fixture["participants"][0]
-        team_2_data = fixture["participants"][1]
-
-        team_1_team_id = team_1_data["id"]
-        team_1_name = team_1_data["name"]
-        team_1_code = team_1_data["short_code"]
-        team_1_image = team_1_data["image_path"]
-        team_1_location = team_1_data["meta"]["location"]
-
-        team_2_team_id = team_2_data["id"]
-        team_2_name = team_2_data["name"]
-        team_2_code = team_2_data["short_code"]
-        team_2_image = team_2_data["image_path"]
-        team_2_location = team_2_data["meta"]["location"]
-
-        matches_info.append({
-            "match_id": fixture["id"],
-            "league_id": fixture["league_id"],
-            "season_id": fixture["season_id"],
-            "fixture_name": fixture["name"],
-            "start_time": fixture["starting_at"],
-            "team_data": [{"team_1_team_id": team_1_team_id, "team_1_name": team_1_name,
-                           "team_1_code": team_1_code, "team_1_image": team_1_image,
-                           "team_1_location": team_1_location},
-                          {"team_2_team_id": team_2_team_id, "team_2_name": team_2_name,
-                           "team_2_code": team_2_code, "team_2_image": team_2_image,
-                           "team_2_location": team_2_location}]
-        })
-    return matches_info
+    fixtures = get_all_daily_fixtures(conn, config)
+    return [get_single_fixture(fixture) for fixture in fixtures]
 
 
 def manage_schedule_groups(scheduler_client: client, current_group: str) -> None:
