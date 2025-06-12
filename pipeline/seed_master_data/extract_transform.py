@@ -83,11 +83,16 @@ def fetch_entity_name_from_api(entity: str, entity_id: int) -> str:
         headers={}
     )
     res = conn.getresponse()
+    body = res.read().decode("utf-8")
     if res.status != 200:
         raise Exception(
             f"Failed to fetch {entity} with ID {entity_id}: {res.status} {res.reason}")
 
-    data = loads(res.read().decode("utf-8"))
+    data = loads(body)
+    if "data" not in data or "name" not in data["data"]:
+        raise Exception(
+            f"Invalid response for {entity} with id: {entity_id}:{data}"
+        )
     conn.close()
 
     return data["data"]["name"]
