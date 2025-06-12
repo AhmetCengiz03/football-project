@@ -78,7 +78,7 @@ def get_active_period(periods: list[dict]) -> dict:
         if period.get("ticking", False):
             return period
 
-    return None
+    return periods[1]
 
 
 def get_period_information(df: pd.DataFrame) -> tuple[bool, int, int]:
@@ -131,6 +131,7 @@ def create_match_minute_df(df_stats: pd.DataFrame, df_map: pd.DataFrame) -> pd.D
     """Returns the match_minute DataFrame resembling our ERD."""
 
     df_stats = df_stats.merge(df_map, on="type_id", how="left")
+    print(df_stats)
     df_stats["statistic_name"] = df_stats["statistic_name"] + \
         df_stats["location"].map({"home": "_home", "away": "_away"})
 
@@ -210,23 +211,36 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         "shots_total_away": "shots_away"
     })
 
-    return df_minute, df_match_event
+    game_status = get_flags(df, df_stats)
+    return df_minute, df_match_event, game_status
+
+
+def get_flags(df: pd.DataFrame, df_stats: pd.DataFrame) -> dict:
+    """Returns a dict of the game state flags."""
+
+    half_live = df_stats["half_live"].iloc[0]
+    result_info = df["result_info"].iloc[0]
+
+    return {
+        "half_live": bool(half_live),
+        "game_over": result_info is not None
+    }
 
 
 if __name__ == "__main__":
 
     load_dotenv()
 
-    # api_token = ENV["TOKEN"]
-    # api_conn = HTTPSConnection("api.sportmonks.com")
-    # identify_match = 19411877
-    # api_data = run_extract(identify_match, api_token, api_conn)
-    # base_df = get_dataframe_from_response(api_data)
+    api_token = ENV["TOKEN"]
+    api_conn = HTTPSConnection("api.sportmonks.com")
+    identify_match = 19411877
+    api_data = run_extract(identify_match, api_token, api_conn)
+    base_df = get_dataframe_from_response(api_data)
 
-    base_df = get_dataframe_from_json("match_scrapes/scrape_100.json")
-    base_df['request_timestamp'] = datetime.now(
-        timezone.utc).timestamp()  # temporary, to act as live data will
+    # base_df = get_dataframe_from_json("match_scrapes/scrape_100.json")
+    # base_df['request_timestamp'] = datetime.now(
+    #     timezone.utc).timestamp()  # temporary, to act as live data will
 
-    transform_data(base_df)
+    print(transform_data(base_df))
 
-    # api_conn.close()
+    api_conn.close()
