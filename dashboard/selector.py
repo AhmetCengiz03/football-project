@@ -56,6 +56,15 @@ def find_and_select_match(comp_data, home_team, away_team):
         selected_match = matches.iloc[0]
         st.session_state["selected_match_id"] = selected_match["match_id"]
         st.success("Match found")
+    else:
+        dates = matches["match_date"].astype(str).tolist()
+        match_ids = matches["match_id"].tolist()
+
+        selected_date = st.selectbox("Select date:", dates, key="match_date")
+        if selected_date:
+            selected_index = dates.index(selected_date)
+            st.session_state["selected_match_id"] = match_ids[selected_index]
+            st.success("Match found")
 
 
 def create_match_selector():
