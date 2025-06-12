@@ -12,7 +12,11 @@ from extract import run_extract
 
 
 def get_dataframe_from_response(data: dict) -> pd.DataFrame:
-    """Returns a pandas DataFrame if data is valid."""
+    """
+    Returns a pandas DataFrame if data is valid.
+    A json scrape expects data["data"] to be a list,
+    whereas a live scrape expects a dict. This handles that.
+    """
 
     if 'data' not in data:
         raise ValueError("API Response missing 'data' key.")
