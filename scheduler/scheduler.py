@@ -115,7 +115,7 @@ def format_team_codes(team_1: str, team_2: str) -> str:
 
 
 def create_match_schedule(scheduler_client: client, match: dict,
-                          group_name: str, config: dict) -> None:
+                          group_name: str, config: dict, schedule_prefix: str) -> None:
     """Create a single match schedule."""
     start_time = datetime.strptime(
         match["start_time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
@@ -124,7 +124,7 @@ def create_match_schedule(scheduler_client: client, match: dict,
     formatted_codes = format_team_codes(
         match["team_data"][0], match["team_data"][1])
 
-    schedule_name = f"c17-football-{formatted_codes}"
+    schedule_name = f"{schedule_prefix}-{formatted_codes}"
     try:
         scheduler_client.create_schedule(
             Name=schedule_name,
@@ -153,7 +153,7 @@ def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
 
     tomorrow_date = (datetime.now(timezone.utc) +
                      timedelta(days=1)).strftime('%Y-%m-%d')
-    group_name = f"c17-football-{tomorrow_date}-fixtures"
+    group_name = f"{schedule_prefix}-{tomorrow_date}-fixtures"
 
     scheduler_client = client("scheduler",
                               aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
@@ -169,7 +169,8 @@ def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
     manage_schedule_groups(scheduler_client, group_name, schedule_prefix)
 
     for match in fixtures:
-        create_match_schedule(scheduler_client, match, group_name, config)
+        create_match_schedule(scheduler_client, match,
+                              group_name, config, schedule_prefix)
 
     return {"statusCode": 200, "body": f"Created {len(fixtures)} schedules in group {group_name}",
             "matches": fixtures}
