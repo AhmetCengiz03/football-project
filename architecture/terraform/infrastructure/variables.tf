@@ -10,3 +10,23 @@ variable AWS_ACCESS_KEY {
 variable AWS_SECRET_KEY {
     type = string
 }
+
+variable CURRENT_VPC_ID {
+    type = string
+}
+
+variable PUBLIC_SUBNET_GROUP_NAME {
+    type = string
+}
+
+variable DATABASE_USERNAME {
+    type = string
+}
+
+variable DATABASE_NAME {
+    type = string
+}
+
+variable DATABASE_PASSWORD {
+    type = string
+}
