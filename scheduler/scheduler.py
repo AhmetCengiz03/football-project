@@ -73,7 +73,7 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
     return [get_single_fixture(fixture) for fixture in fixtures]
 
 
-def manage_schedule_groups(scheduler_client: client, current_group: str) -> None:
+def manage_schedule_groups(scheduler_client: client, current_group: str, schedule_prefix: str) -> None:
     """Create current group and cleanup old ones."""
     try:
         scheduler_client.create_schedule_group(Name=current_group)
@@ -85,14 +85,14 @@ def manage_schedule_groups(scheduler_client: client, current_group: str) -> None
         current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         tomorrow_date = (datetime.now(timezone.utc) + timedelta(days=1)
                          ).strftime('%Y-%m-%d')
-        keep_groups = {f"c17-football-{current_date}-fixtures",
-                       f"c17-football-{tomorrow_date}-fixtures"}
+        keep_groups = {f"{schedule_prefix}-{current_date}-fixtures",
+                       f"{schedule_prefix}-{tomorrow_date}-fixtures"}
 
         paginator = scheduler_client.get_paginator("list_schedule_groups")
         for page in paginator.paginate():
             for group in page["ScheduleGroups"]:
                 group_name = group["Name"]
-                if (group_name.startswith("c17-football-") and
+                if (group_name.startswith(schedule_prefix) and
                     group_name.endswith("-fixtures") and
                         group_name not in keep_groups):
 
@@ -147,7 +147,7 @@ def create_match_schedule(scheduler_client: client, match: dict,
         logging.info("Schedule %s already exists", schedule_name)
 
 
-def process_daily_schedules(config: dict) -> dict:
+def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
     """Main processing function."""
     configure_logger()
 
@@ -166,7 +166,7 @@ def process_daily_schedules(config: dict) -> dict:
     if not fixtures:
         return {"statusCode": 200, "body": "No fixtures found today", "matches": []}
 
-    manage_schedule_groups(scheduler_client, group_name)
+    manage_schedule_groups(scheduler_client, group_name, schedule_prefix)
 
     for match in fixtures:
         create_match_schedule(scheduler_client, match, group_name, config)
@@ -186,10 +186,10 @@ def lambda_handler(event, context):
     Returns:
         Dictionary with status code and response body
     """
-    return process_daily_schedules(ENV)
+    return process_daily_schedules(ENV, 'c17-football')
 
 
 if __name__ == "__main__":
     load_dotenv()
-    result = process_daily_schedules(ENV)
+    result = process_daily_schedules(ENV, 'c17-football')
     # print(result["matches"])
