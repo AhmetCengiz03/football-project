@@ -8,26 +8,26 @@ DROP TABLE IF EXISTS competition;
 DROP TABLE IF EXISTS team;
 
 CREATE TABLE team (
-    team_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    team_id SMALLINT,
     team_name VARCHAR(50) NOT NULL,
     logo_url TEXT NOT NULL,
     PRIMARY KEY (team_id)
 );
 
 CREATE TABLE competition (
-    competition_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    competition_id SMALLINT,
     competition_name VARCHAR(50) NOT NULL UNIQUE,
     PRIMARY KEY (competition_id)
 );
 
 CREATE TABLE season (
-    season_id SMALLINT NOT NULL,
+    season_id SMALLINT,
     season_name VARCHAR(50) NOT NULL UNIQUE,
     PRIMARY KEY (season_id)
 );
 
 CREATE TABLE match (
-    match_id INT GENERATED ALWAYS AS IDENTITY,
+    match_id INT,
     home_team_id INT NOT NULL,
     away_team_id INT NOT NULL,
     match_date TIMESTAMP,
