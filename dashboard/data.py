@@ -90,7 +90,3 @@ def get_match_info_for_selected_match(match_id: int, conn: connection) -> pd.Dat
         records = cursor.fetchall()
         info_data = pd.DataFrame(records)
     return info_data
-
-
-if __name__ == "__main__":
-    load_dotenv()
