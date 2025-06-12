@@ -24,8 +24,8 @@ def connect_to_scheduler_client(config: dict) -> client:
 
 
 def get_all_daily_fixtures(conn: HTTPSConnection, config: dict) -> dict:
-    """Get the fixtures happening today."""
-    date = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+    """Get the fixtures happening tomorrow."""
+    date = (datetime.now(timezone.utc) + timedelta(days=1)).strftime('%Y-%m-%d')
     conn.request(
         "GET", f"/v3/football/fixtures/date/{date}?api_token={config[
             "API_KEY"]}&include=participants")
