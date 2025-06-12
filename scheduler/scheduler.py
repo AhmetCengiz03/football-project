@@ -46,12 +46,6 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
     data = get_all_daily_fixtures(conn, config)
     matches_info = []
     for fixture in data:
-        match_id = fixture["id"]
-        league_id = fixture["league_id"]
-        season_id = fixture["season_id"]
-        fixture_name = fixture["name"]
-        fixture_start_time = fixture["starting_at"]
-
         team_1_data = fixture["participants"][0]
         team_2_data = fixture["participants"][1]
 
@@ -68,11 +62,11 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
         team_2_location = team_2_data["meta"]["location"]
 
         matches_info.append({
-            "match_id": match_id,
-            "league_id": league_id,
-            "season_id": season_id,
-            "fixture_name": fixture_name,
-            "start_time": fixture_start_time,
+            "match_id": fixture["id"],
+            "league_id": fixture["league_id"],
+            "season_id": fixture["season_id"],
+            "fixture_name": fixture["name"],
+            "start_time": fixture["starting_at"],
             "team_data": [{"team_1_team_id": team_1_team_id, "team_1_name": team_1_name,
                            "team_1_code": team_1_code, "team_1_image": team_1_image,
                            "team_1_location": team_1_location},
