@@ -135,23 +135,26 @@ def create_match_schedule(scheduler_client: client, match: dict,
         match["team_data"][0], match["team_data"][1])
 
     schedule_name = f"c17-football-{formatted_codes}"
+    try:
+        scheduler_client.create_schedule(
+            Name=schedule_name,
+            GroupName=group_name,
+            ScheduleExpression='cron(* * * * ? *)',
+            StartDate=start_time.isoformat(),
+            EndDate=end_time.isoformat(),
+            FlexibleTimeWindow={'Mode': 'OFF'},
+            Target={
+                'Arn': config["TARGET_ARN"],
+                'RoleArn': config["ROLE_ARN"],
+                'Input': dumps(match)
+            },
+            State='ENABLED',
+            Description=f"Schedule for fixture: {match['fixture_name']}"
+        )
+        logging.info("Created schedule: %s", schedule_name)
 
-    scheduler_client.create_schedule(
-        Name=schedule_name,
-        GroupName=group_name,
-        ScheduleExpression='cron(* * * * ? *)',
-        StartDate=start_time.isoformat(),
-        EndDate=end_time.isoformat(),
-        FlexibleTimeWindow={'Mode': 'OFF'},
-        Target={
-            'Arn': config["TARGET_ARN"],
-            'RoleArn': config["ROLE_ARN"],
-            'Input': dumps(match)
-        },
-        State='ENABLED',
-        Description=f"Schedule for fixture: {match['fixture_name']}"
-    )
-    logging.info("Created schedule: %s", schedule_name)
+    except scheduler_client.exceptions.ConflictException:
+        logging.info("Schedule %s already exists", schedule_name)
 
 
 def process_daily_schedules(config: dict) -> dict:
@@ -198,4 +201,4 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
     load_dotenv()
     result = process_daily_schedules(ENV)
-    print(result["body"])
+    print(result["matches"])
