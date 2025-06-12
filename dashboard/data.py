@@ -12,19 +12,18 @@ import streamlit as st
 @st.cache_resource
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
-    conn = psycopg2.connect(
+    return psycopg2.connect(
         host=ENV("DB_HOST"),
         dbname=ENV("DB_NAME"),
         user=ENV("DB_USER"),
         password=ENV("DB_PASSWORD"),
         port=ENV("DB_PORT")
     )
-    return conn
 
 
 @st.cache_data
 def get_all_matches(conn: connection) -> pd.DataFrame:
-    """Get all matches for dropdown."""
+    """Get all matches for the dropdown."""
     query = """
             SELECT m.match_id, m.match_date,
                 ht.team_name as home_team,
