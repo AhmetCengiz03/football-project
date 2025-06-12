@@ -10,6 +10,65 @@ from dotenv import load_dotenv
 
 from extract import run_extract
 
+STATS_COLUMNS = [
+    "accurate_crosses_away",
+    "accurate_crosses_home",
+    "ball_possession_away",
+    "big_chances_created_away",
+    "big_chances_created_home",
+    "big_chances_missed_away",
+    "big_chances_missed_home",
+    "dribbled_attempts_away",
+    "dribbled_attempts_home",
+    "duels_won_away",
+    "duels_won_home",
+    "free_kicks_away",
+    "free_kicks_home",
+    "goal_attempts_away",
+    "goal_attempts_home",
+    "goal_kicks_away",
+    "goal_kicks_home",
+    "interceptions_away",
+    "interceptions_home",
+    "long_passes_away",
+    "long_passes_home",
+    "shots_blocked_away",
+    "shots_blocked_home",
+    "shots_off_target_away",
+    "shots_off_target_home",
+    "successful_dribbles_percentage_away",
+    "successful_dribbles_percentage_home",
+    "successful_dribbles_away",
+    "successful_dribbles_home",
+    "successful_passes_percentage_home",
+    "successful_passes_percentage_away",
+    "throwins_away",
+    "throwins_home",
+    "total_crosses_away",
+    "total_crosses_home"
+]
+
+BULK_COLUMNS = [
+    "league_id",
+    "season_id",
+    "sport_id",
+    "stage_id",
+    "group_id",
+    "aggregate_id",
+    "round_id",
+    "state_id",
+    "venue_id",
+    "name",
+    "starting_at",
+    "leg",
+    "details",
+    "length",
+    "placeholder",
+    "has_odds",
+    "has_premium_odds",
+    "starting_at_timestamp",
+]
+
 
 def get_dataframe_from_response(data: dict) -> pd.DataFrame:
     """
@@ -17,6 +76,9 @@ def get_dataframe_from_response(data: dict) -> pd.DataFrame:
     A json scrape expects data["data"] to be a list,
     whereas a live scrape expects a dict. This handles that.
     """
+
+    if not data:
+        raise ValueError("Data is empty.")
 
     if 'data' not in data:
         raise ValueError("API Response missing 'data' key.")
@@ -38,29 +100,8 @@ def get_dataframe_from_json(file_path: str) -> pd.DataFrame:
     return get_dataframe_from_response(data)
 
 
-def drop_bulk_columns(df: pd.DataFrame) -> pd.DataFrame:
+def drop_bulk_columns(df: pd.DataFrame, columns_to_remove: list[str]) -> pd.DataFrame:
     """Drops unnecessary columns from the extracted data."""
-
-    columns_to_remove = [
-        "league_id",
-        "season_id",
-        "sport_id",
-        "stage_id",
-        "group_id",
-        "aggregate_id",
-        "round_id",
-        "state_id",
-        "venue_id",
-        "name",
-        "starting_at",
-        "leg",
-        "details",
-        "length",
-        "placeholder",
-        "has_odds",
-        "has_premium_odds",
-        "starting_at_timestamp",
-    ]
 
     return df.drop(columns=columns_to_remove, errors="ignore")
 
@@ -152,46 +193,8 @@ def create_match_minute_df(df_stats: pd.DataFrame, df_map: pd.DataFrame) -> pd.D
     return df_minute
 
 
-def drop_unwanted_stats(df: pd.DataFrame) -> pd.DataFrame:
+def drop_unwanted_stats(df: pd.DataFrame, columns_to_remove: list[str]) -> pd.DataFrame:
     """Drops stats not necessary to our design."""
-
-    columns_to_remove = [
-        "accurate_crosses_away",
-        "accurate_crosses_home",
-        "ball_possession_away",
-        "big_chances_created_away",
-        "big_chances_created_home",
-        "big_chances_missed_away",
-        "big_chances_missed_home",
-        "dribbled_attempts_away",
-        "dribbled_attempts_home",
-        "duels_won_away",
-        "duels_won_home",
-        "free_kicks_away",
-        "free_kicks_home",
-        "goal_attempts_away",
-        "goal_attempts_home",
-        "goal_kicks_away",
-        "goal_kicks_home",
-        "interceptions_away",
-        "interceptions_home",
-        "long_passes_away",
-        "long_passes_home",
-        "shots_blocked_away",
-        "shots_blocked_home",
-        "shots_off_target_away",
-        "shots_off_target_home",
-        "successful_dribbles_percentage_away",
-        "successful_dribbles_percentage_home",
-        "successful_dribbles_away",
-        "successful_dribbles_home",
-        "successful_passes_percentage_home",
-        "successful_passes_percentage_away",
-        "throwins_away",
-        "throwins_home",
-        "total_crosses_away",
-        "total_crosses_home"
-    ]
 
     return df.drop(columns=columns_to_remove, errors="ignore")
 
@@ -199,7 +202,7 @@ def drop_unwanted_stats(df: pd.DataFrame) -> pd.DataFrame:
 def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Runs the transformation process."""
 
-    df = drop_bulk_columns(df)
+    df = drop_bulk_columns(df, BULK_COLUMNS)
     df_match_event = get_match_event_df(df)
 
     df_stats = append_period_to_statistics(df, get_statistics(df))
@@ -207,7 +210,7 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df_minute = create_match_minute_df(
         df_stats, get_type_mapping("types_map_api.xlsx"))
 
-    df_minute = drop_unwanted_stats(df_minute)
+    df_minute = drop_unwanted_stats(df_minute, STATS_COLUMNS)
     df_minute = df_minute.rename(columns={
         "ball_possession_home": "possession_home",
         "shots_insidebox_home": "shots_inside_home",
