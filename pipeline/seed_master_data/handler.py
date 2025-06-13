@@ -16,7 +16,7 @@ def lambda_handler(event, context):
     """Lambda entry point for processing and storing match master data."""
 
     try:
-        logger.info("Received match info: %s", json.dumps(event))
+        logger.info("Received match info: %s", dumps(event))
 
         transformed_data = validate_and_transform_data(event)
         logger.info("Transformed data: %s", transformed_data)
