@@ -102,18 +102,6 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
         logging.error("Error during group cleanup: %s", e)
 
 
-def format_team_names(team_1: str, team_2: str) -> str:
-    """Format team names for schedule name."""
-    team_1_raw = team_1.get(
-        "team_1_name", "unknown") or "unknown"
-    team_2_raw = team_2.get(
-        "team_2_name", "unknown") or "unknown"
-
-    team_1_clean = sub(r'[^a-zA-Z0-9]', '', team_1_raw).lower()
-    team_2_clean = sub(r'[^a-zA-Z0-9]', '', team_2_raw).lower()
-    return f"{team_1_clean}-{team_2_clean}"[:50]
-
-
 def create_match_schedule(scheduler_client: client, match: dict,
                           group_name: str, config: dict, schedule_prefix: str) -> None:
     """Create a single match schedule."""
@@ -121,10 +109,7 @@ def create_match_schedule(scheduler_client: client, match: dict,
         match["start_time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     end_time = start_time + timedelta(hours=3)
 
-    formatted_codes = format_team_names(
-        match["team_data"][0], match["team_data"][1])
-
-    schedule_name = f"{schedule_prefix}-{formatted_codes}"
+    schedule_name = f"{schedule_prefix}-{match["match_id"]}"
     try:
         scheduler_client.create_schedule(
             Name=schedule_name,

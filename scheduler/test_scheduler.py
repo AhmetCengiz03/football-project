@@ -6,35 +6,9 @@ from datetime import datetime, timedelta
 
 from scheduler import (
     get_data_from_fixtures,
-    format_team_names, create_match_schedule,
+    create_match_schedule,
     manage_schedule_groups
 )
-
-
-def test_format_team_codes_valid_codes(sample_fixture_data):
-    participants = sample_fixture_data[0]["participants"]
-    team_1 = {
-        "team_1_name": participants[0]["name"]
-    }
-    team_2 = {
-        "team_2_name": participants[1]["name"]
-    }
-
-    formatted = format_team_names(team_1, team_2)
-    assert formatted == "teama-teamb"
-
-
-def test_format_team_codes_no_team_name(sample_fixture_data):
-    participants = sample_fixture_data[0]["participants"]
-    team_1 = {
-        "team_1_name": None
-    }
-    team_2 = {
-        "team_2_name": participants[1]["name"]
-    }
-
-    formatted = format_team_names(team_1, team_2)
-    assert formatted == "unknown-teamb"
 
 
 @patch("scheduler.get_all_daily_fixtures")
