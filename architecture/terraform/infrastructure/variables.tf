@@ -30,3 +30,11 @@ variable DATABASE_NAME {
 variable DATABASE_PASSWORD {
     type = string
 }
+
+variable DATABASE_HOST {
+    type = string
+}
+
+variable DATABASE_PORT {
+    type = string
+}

@@ -66,45 +66,31 @@ resource "aws_s3_object" "report_folder" {
 }
 
 
-# S3 BUCKET
-
-resource "aws_s3_bucket" "s3_bucket" {
-    bucket = "c17-football-report-bucket"
-    force_destroy = true
-}
-
-resource "aws_s3_object" "report_folder" {
-  bucket = aws_s3_bucket.s3_bucket.id
-  key    = "reports/"
-  content = ""
-}
-
-
 # ECR
-# data "aws_ecr_image" "scheduler_image" {
-#     repository_name = "c17-football-scheduler-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "scheduler_image" {
+    repository_name = "c17-football-scheduler-ecr"
+    image_tag = "latest"
+}
 
-# data "aws_ecr_image" "match_seeder_image" {
-#     repository_name = "c17-football-match-seeder-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "match_seeder_image" {
+    repository_name = "c17-football-match-seeder-ecr"
+    image_tag = "latest"
+}
 
-# data "aws_ecr_image" "pipeline_image" {
-#     repository_name = "c17-football-pipeline-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "pipeline_image" {
+    repository_name = "c17-football-pipeline-ecr"
+    image_tag = "latest"
+}
 
-# data "aws_ecr_image" "notification_image" {
-#     repository_name = "c17-football-notification-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "notification_image" {
+    repository_name = "c17-football-notification-ecr"
+    image_tag = "latest"
+}
 
-# data "aws_ecr_image" "report_image" {
-#     repository_name = "c17-football-report-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "report_image" {
+    repository_name = "c17-football-report-ecr"
+    image_tag = "latest"
+}
 
 data "aws_ecr_image" "scheduler_stopper_image" {
     repository_name = "c17-football-scheduler-stopper-ecr"
@@ -168,6 +154,12 @@ resource "aws_iam_policy" "lambda_policy" {
         "Effect": "Allow",
         "Action": "sns:Publish",
         "Resource": aws_sns_topic.report-topic.arn
+      },
+    {
+        "Sid": "PublishSESMessage",
+        "Effect": "Allow",
+        "Action": "sns:Publish",
+        "Resource": aws_sns_topic.report-topic.arn
       }
     ]
   })
@@ -191,12 +183,11 @@ resource "aws_lambda_function" "report_lambda" {
 
     environment {
         variables = {
-            DB_HOST=var.DB_HOST
-            DB_PORT=var.DB_PORT
-            DB_USER=var.DB_USER
-            DB_PASSWORD=var.DB_PASSWORD
-            DB_NAME=var.DB_NAME
-            DB_SCHEMA=var.DB_SCHEMA
+            DB_HOST=var.DATABASE_HOST
+            DB_PORT=var.DATABASE_PORT
+            DB_USER=var.DATABASE_USERNAME
+            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_NAME=var.DATABASE_NAME
             TOPIC_REGION=var.AWS_REGION
             TOPIC_ARN=aws_sns_topic.report-topic.arn
         }
