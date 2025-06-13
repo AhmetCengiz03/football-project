@@ -157,10 +157,11 @@ def append_period_to_statistics(df: pd.DataFrame, df_stats: pd.DataFrame) -> pd.
 def get_match_event_df(df: pd.DataFrame) -> pd.DataFrame:
     """Returns the DataFrame for the match_event table."""
 
-    comments = df.at[0, "comments"]
+    events = df.at[0, "events"]
     # This needs reworking with live game event data.
 
-    df_comments = pd.DataFrame(comments)
+    df_events = pd.DataFrame(events)
+    return df_events
     return df_comments.drop(columns=['id', 'fixture_id'], errors="ignore")
 
 
@@ -241,16 +242,19 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    api_token = ENV["TOKEN"]
-    api_conn = HTTPSConnection("api.sportmonks.com")
-    identify_match = 19411877
-    api_data = run_extract(identify_match, api_token, api_conn)
-    base_df = get_dataframe_from_response(api_data)
+    # api_token = ENV["TOKEN"]
+    # api_conn = HTTPSConnection("api.sportmonks.com")
+    # identify_match = 19411877
+    # api_data = run_extract(identify_match, api_token, api_conn)
+    # base_df = get_dataframe_from_response(api_data)
 
-    # base_df = get_dataframe_from_json("match_scrapes/scrape_100.json")
-    # base_df['request_timestamp'] = datetime.now(
-    #     timezone.utc).timestamp()  # temporary, to act as live data will
+    base_df = get_dataframe_from_json("match_19387018/scrape_10.json")
+    base_df['request_timestamp'] = datetime.now(
+        timezone.utc).timestamp()  # temporary, to act as live data will
 
-    print(transform_data(base_df))
+    a, b, c = transform_data(base_df)
+    print("MINUTES", a, "\n")
+    print("EVENTS", b, "\n")
+    print("FLAGS", c, "\n")
 
-    api_conn.close()
+    # api_conn.close()

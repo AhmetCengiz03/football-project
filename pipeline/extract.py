@@ -31,9 +31,9 @@ def build_scrape_url(match_identifier: str | int, token: str) -> str:
     """Returns the url required based on the given identifier."""
 
     if isinstance(match_identifier, str):
-        url = f"livescores/inplay?api_token={token}&include=statistics;periods;comments&filters=participantSearch:{match_identifier}"
+        url = f"livescores/inplay?api_token={token}&include=statistics;periods;events&filters=participantSearch:{match_identifier}"
     elif isinstance(match_identifier, int):
-        url = f"fixtures/{match_identifier}?api_token={token}&include=statistics;periods;comments"
+        url = f"fixtures/{match_identifier}?api_token={token}&include=statistics;periods;events"
     else:
         raise TypeError(
             f"{match_identifier} is not a valid string or integer.")
