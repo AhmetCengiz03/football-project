@@ -1,6 +1,4 @@
-import json
 import logging
-
 from json import dumps
 
 from dotenv import load_dotenv
@@ -8,18 +6,24 @@ from dotenv import load_dotenv
 from extract_transform import validate_and_transform_data
 from load_data import load_master_data
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+
+def configure_logger() -> logging.Logger:
+    """Sets up the logger."""
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    return logger
 
 
 def lambda_handler(event, context):
     """Lambda entry point for processing and storing match master data."""
 
     try:
-        logger.info("Received match info: %s", dumps(event))
+        load_dotenv()
+        logger = configure_logger()
+        logger.info("Received match info")
 
         transformed_data = validate_and_transform_data(event)
-        logger.info("Transformed data: %s", transformed_data)
+        logger.info("Transformed data")
 
         load_master_data(transformed_data)
         logger.info("Data loaded successfully.")
