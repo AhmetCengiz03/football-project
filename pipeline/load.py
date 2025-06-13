@@ -9,7 +9,7 @@ from psycopg2.extras import execute_values
 from psycopg2.extensions import connection
 
 
-def configure_logger() -> None:
+def configure_logger() -> logging.Logger:
     """Sets up the logger."""
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
