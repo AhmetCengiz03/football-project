@@ -3,7 +3,6 @@ from os import environ as ENV
 from json import loads, dumps
 import logging
 from http.client import HTTPSConnection
-from re import sub
 from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv

@@ -2,7 +2,6 @@
 import logging
 from os import environ as ENV
 from json import dumps
-from re import sub
 
 from dotenv import load_dotenv
 from boto3 import client
