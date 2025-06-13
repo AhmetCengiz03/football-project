@@ -121,3 +121,13 @@ CREATE TABLE player_match_event (
     FOREIGN KEY (match_event_id) REFERENCES match_event(match_event_id)
 );
 
+INSERT INTO event_type (event_type_id, type_name) VALUES
+(10, 'var'),
+(14, 'goal'),
+(15, 'owngoal'),
+(16, 'penalty'),
+(17, 'missed_penalty'),
+(18, 'substitution'),
+(19, 'yellowcard'),
+(20, 'redcard');
+
