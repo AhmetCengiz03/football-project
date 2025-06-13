@@ -36,15 +36,13 @@ def insert_season(cur, name: str) -> None:
     """, (name,))
 
 
-def insert_match(cur, home_team_id: int, away_team_id: int, match_date: str) -> int:
+def insert_match(cur, match_id: int, home_team_id: int, away_team_id: int, match_date: str) -> None:
     """Inserts a match and returns its generated ID."""
     cur.execute("""
-        INSERT INTO match (home_team_id, away_team_id, match_date)
-        VALUES (%s, %s, %s)
-        RETURNING match_id;
-    """, (home_team_id, away_team_id, match_date))
-
-    return cur.fetchone()[0]
+        INSERT INTO match (match_id, home_team_id, away_team_id, match_date)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (match_id) DO NOTHING;
+    """, (match_id, home_team_id, away_team_id, match_date))
 
 
 def insert_match_assignment(cur, match_id: int, competition_name: str, season_name: str) -> None:
@@ -87,16 +85,17 @@ def load_master_data(master_data: dict) -> None:
     if master_data.get("insert_season"):
         insert_season(cur, master_data["season_name"])
 
-    match_id = insert_match(
+    insert_match(
         cur,
+        master_data["match_id"],
         master_data["home_team"]["team_id"],
         master_data["away_team"]["team_id"],
         master_data["match_date"]
     )
     insert_match_assignment(
-        cur, match_id, master_data["competition_name"], master_data["season_name"]
+        cur, master_data["match_id"], master_data["competition_name"], master_data["season_name"]
     )
-    print(f"""Inserted match {match_id} for {master_data['competition_name']} 
+    print(f"""Inserted match {master_data["match_id"]} for {master_data['competition_name']} 
         - {master_data['season_name']}""")
 
     conn.commit()

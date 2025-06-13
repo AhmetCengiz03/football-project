@@ -26,7 +26,7 @@ def get_db_connection() -> connection:
 def validate_required_values(event: dict) -> None:
     """Validates that all required top-level fields are present in the event."""
     required_keys = ["match_id", "league_id", "season_id",
-                     "start_time", "location", "team_data"]
+                     "start_time", "team_data"]
 
     for key in required_keys:
         if key not in event:
@@ -63,15 +63,18 @@ def extract_team_info(team: dict) -> dict:
 
 
 def validate_timestamp(timestamp: str) -> None:
-    """Validates that the timestamp is a valid ISO format string and in UTC."""
+    """Validates that the timestamp is either implicit or explicit UTC format."""
     try:
-        if timestamp.endswith("Z"):
-            timestamp = timestamp.replace("Z", "+00:00")
-        dt = datetime.fromisoformat(timestamp)
-        if dt.utcoffset() != timezone.utc.utcoffset(dt):
-            raise ValueError("Timestamp must be in UTC (offset +00:00).")
-    except (ValueError, TypeError):
-        raise ValueError("Invalid 'start_time' timestamp format.")
+        datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        try:
+            if timestamp.endswith("Z"):
+                timestamp = timestamp.replace("Z", "+00:00")
+            datetime.fromisoformat(timestamp)
+        except ValueError:
+            raise ValueError(
+                "Invalid 'start_time' format. Must be 'YYYY-MM-DD HH:MM:SS' or ISO 8601 UTC."
+            )
 
 
 def fetch_entity_name_from_api(entity: str, entity_id: int) -> str:
