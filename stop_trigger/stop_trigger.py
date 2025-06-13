@@ -7,8 +7,11 @@ from dotenv import load_dotenv
 from boto3 import client
 
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+def configure_logger() -> logging.Logger:
+    """Sets up the logger."""
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    return logger
 
 
 def connect_to_scheduler_client(config: dict) -> client:
@@ -17,7 +20,7 @@ def connect_to_scheduler_client(config: dict) -> client:
                   aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
 
 
-def format_team_codes(team_1: str, team_2: str) -> str:
+def format_team_names(team_1: str, team_2: str) -> str:
     """Format team names for schedule name."""
 
     team_1_clean = sub(r'[^a-zA-Z0-9]', '', team_1).lower()
@@ -26,20 +29,20 @@ def format_team_codes(team_1: str, team_2: str) -> str:
     return f"{team_1_clean}-{team_2_clean}"[:50]
 
 
-def get_schedule_groups(scheduler_client):
+def get_schedule_groups(scheduler_client: client, schedule_prefix: str) -> list[str]:
     """Get the group names of the schedulers."""
     schedule_groups = []
     paginator = scheduler_client.get_paginator("list_schedule_groups")
     for page in paginator.paginate():
         for group in page["ScheduleGroups"]:
             group_name = group["Name"]
-            if (group_name.startswith("c17-football-") and
+            if (group_name.startswith(schedule_prefix) and
                group_name.endswith("-fixtures")):
                 schedule_groups.append(group_name)
     return schedule_groups
 
 
-def delete_scheduler(scheduler, schedule_name, group_names):
+def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[str]) -> None:
     """Delete the specified scheduler."""
     for group_name in group_names:
         try:
@@ -50,17 +53,18 @@ def delete_scheduler(scheduler, schedule_name, group_names):
             logging.info("Could not find and delete: %s", schedule_name)
 
 
-def process_schedule_deletion(config: dict, home_team: str, away_team: str):
+def process_schedule_deletion(config: dict, home_team: str, away_team: str, schedule_prefix: str) -> None:
     """Main processing function."""
+    configure_logger()
     scheduler = client("scheduler", aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
                        aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
-    group_names = get_schedule_groups(scheduler)
-    formatted_codes = format_team_codes(home_team, away_team)
-    schedule_name = f"c17-football-{formatted_codes}"
+    group_names = get_schedule_groups(scheduler, schedule_prefix)
+    formatted_codes = format_team_names(home_team, away_team)
+    schedule_name = f"{schedule_prefix}-{formatted_codes}"
     delete_scheduler(scheduler, schedule_name, group_names)
 
 
-def lambda_handler(event):
+def lambda_handler(event, context):
     """
         Main Lambda handler function
         Parameters:
@@ -78,7 +82,8 @@ def lambda_handler(event):
             raise ValueError("home_team, away_team and match end are required")
 
         if match_end == True:
-            process_schedule_deletion(ENV, home_team, away_team)
+            process_schedule_deletion(
+                ENV, home_team, away_team, "c17-football")
             return {
                 "status_Code": 200,
                 "message": "Schedule deleted successfully"
@@ -103,4 +108,4 @@ if __name__ == "__main__":
     load_dotenv()
     HOME_TEAM = "home"
     AWAY_TEAM = "away"
-    process_schedule_deletion(ENV, HOME_TEAM, AWAY_TEAM)
+    process_schedule_deletion(ENV, HOME_TEAM, AWAY_TEAM, "c17-football")
