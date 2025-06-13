@@ -192,5 +192,6 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     load_dotenv()
+    print(get_all_daily_fixtures)
     result = process_daily_schedules(ENV, 'c17-football')
     # print(result["matches"])
