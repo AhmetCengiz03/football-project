@@ -69,6 +69,22 @@ BULK_COLUMNS = [
     "starting_at_timestamp",
 ]
 
+EVENT_COLUMNS = [
+    "period_id",
+    "section",
+    "result",
+    "info",
+    "addition",
+    "minute",
+    "extra_minute",
+    "injured",
+    "on_bench",
+    "coach_id",
+    "sub_type_id",
+    "detailed_period_id",
+    "sort_order"
+]
+
 
 def get_dataframe_from_response(data: dict) -> pd.DataFrame:
     """
@@ -158,11 +174,37 @@ def get_match_event_df(df: pd.DataFrame) -> pd.DataFrame:
     """Returns the DataFrame for the match_event table."""
 
     events = df.at[0, "events"]
-    # This needs reworking with live game event data.
+    return pd.DataFrame(events)
 
-    df_events = pd.DataFrame(events)
+
+def drop_event_columns(df: pd.DataFrame, columns_to_remove: list[str]) -> pd.DataFrame:
+    """Drops events not necessary to our design."""
+
+    return df.drop(columns=columns_to_remove, errors="ignore")
+
+
+def map_event_to_type(df_map: pd.DataFrame, df_event: pd.DataFrame) -> pd.DataFrame:
+    """Return the mapping of event to event_type."""
+
+    return df_event.merge(df_map, on="type_id", how="inner")
+
+
+def prepare_events(df: pd.DataFrame, columns_to_remove: list[str],
+                   df_map: pd.DataFrame) -> pd.DataFrame:
+    """Returns the prepared events DataFrame."""
+
+    df = drop_event_columns(df, columns_to_remove)
+    df_events = map_event_to_type(df_map, df)
+
+    df_events = df_events.rename(columns={
+        "id": "match_event_id",
+        "fixture_id": "match_id",
+        "participant_id": "team_id",
+        "statistic_name": "type_name",
+        "type_id": "event_type_id"
+    })
+
     return df_events
-    return df_comments.drop(columns=['id', 'fixture_id'], errors="ignore")
 
 
 def get_type_mapping(file_path: str) -> pd.DataFrame:
@@ -173,6 +215,7 @@ def get_type_mapping(file_path: str) -> pd.DataFrame:
     df_mapping = df_mapping.drop(
         columns=["parent_id", "code", "name", "model_type", "group", "stat_group"], errors="ignore")
     df_mapping.columns = ["type_id", "statistic_name"]
+    df_mapping["statistic_name"] = df_mapping["statistic_name"].str.lower()
 
     return df_mapping
 
@@ -190,7 +233,6 @@ def create_match_minute_df(df_stats: pd.DataFrame, df_map: pd.DataFrame) -> pd.D
         values="data.value"
     ).reset_index()
 
-    df_minute.columns = df_minute.columns.str.lower()
     return df_minute
 
 
@@ -204,13 +246,13 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Runs the transformation process."""
 
     df = drop_bulk_columns(df, BULK_COLUMNS)
+    df_map = get_type_mapping("types_map_api.xlsx")
     df_match_event = get_match_event_df(df)
+    df_events = prepare_events(df_match_event, EVENT_COLUMNS, df_map)
 
     df_stats = append_period_to_statistics(df, get_statistics(df))
 
-    df_minute = create_match_minute_df(
-        df_stats, get_type_mapping("types_map_api.xlsx"))
-
+    df_minute = create_match_minute_df(df_stats, df_map)
     df_minute = drop_unwanted_stats(df_minute, STATS_COLUMNS)
     df_minute = df_minute.rename(columns={
         "ball_possession_home": "possession_home",
@@ -223,7 +265,7 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     })
 
     game_status = get_flags(df, df_stats)
-    return df_minute, df_match_event, game_status
+    return df_minute, df_events, game_status
 
 
 def get_flags(df: pd.DataFrame, df_stats: pd.DataFrame) -> dict:
@@ -248,7 +290,7 @@ if __name__ == "__main__":
     # api_data = run_extract(identify_match, api_token, api_conn)
     # base_df = get_dataframe_from_response(api_data)
 
-    base_df = get_dataframe_from_json("match_19387018/scrape_10.json")
+    base_df = get_dataframe_from_json("match_19387018/scrape_69.json")
     base_df['request_timestamp'] = datetime.now(
         timezone.utc).timestamp()  # temporary, to act as live data will
 
