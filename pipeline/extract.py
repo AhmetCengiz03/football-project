@@ -52,11 +52,11 @@ def prepare_data(data: dict) -> dict:
     for dict_key in ("subscription", "timezone"):
         data.pop(dict_key, None)
 
-    if "rate_limit" in data:
+    if "data" in data:
         data["data"]["request_timestamp"] = datetime.now(
             timezone.utc).timestamp()
     else:
-        raise KeyError("rate_limit not in data.")
+        raise KeyError("data key not in received data.")
 
     return data
 

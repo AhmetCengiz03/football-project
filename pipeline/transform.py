@@ -75,7 +75,6 @@ EVENT_COLUMNS = [
     "result",
     "info",
     "addition",
-    "minute",
     "extra_minute",
     "injured",
     "on_bench",
