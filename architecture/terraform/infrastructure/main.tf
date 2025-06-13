@@ -20,7 +20,17 @@ data "aws_iam_policy" "RDS_full_access" {
     arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
 }
 
+data "aws_iam_policy" "ecs_service" {
+    arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
 
+data "aws_iam_policy" "ecs_full_access" {
+    arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+}
+
+data "aws_ecs_cluster" "c17-ecs-cluster" {
+  cluster_name = "c17-ecs-cluster"
+}
 
 # RDS
 resource "aws_security_group" "db-security-group" {
@@ -64,6 +74,23 @@ resource "aws_s3_object" "report_folder" {
   key    = "reports/"
   content = ""
 }
+
+
+# SNS Topic
+# resource "aws_sns_topic" "report-topic" {
+#   name  = "c17-football-topic"
+
+#   tags = {
+#     Environment = "dev"
+#     Terraform   = "true"
+#   }
+# }
+
+# resource "aws_sns_topic_subscription" "sms_subscription" {
+#   topic_arn = aws_sns_topic.report-topic.arn
+#   protocol    = "sms"
+#   endpoint    = "+15551234567"
+# }
 
 
 # ECR
@@ -124,7 +151,8 @@ resource "aws_iam_policy" "lambda_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-      {
+
+        {
         Sid    = "S3Access",
         Effect = "Allow",
         Action = [
@@ -138,8 +166,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "arn:aws:s3:::${aws_s3_bucket.s3_bucket.bucket}",
           "arn:aws:s3:::${aws_s3_bucket.s3_bucket.bucket}/*"
         ]
-      },
-      {
+        },
+        {
         Sid    = "CloudWatchLogs",
         Effect = "Allow",
         Action = [
@@ -148,21 +176,138 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:PutLogEvents"
         ],
         Resource = "*"
-      },
-      {
+        },
+        {
         "Sid": "PublishSNSMessage",
         "Effect": "Allow",
         "Action": "sns:Publish",
         "Resource": aws_sns_topic.report-topic.arn
-      },
-    {
+        },
+        {
         "Sid": "PublishSESMessage",
         "Effect": "Allow",
-        "Action": "sns:Publish",
+        "Action": "ses:Publish",
         "Resource": aws_sns_topic.report-topic.arn
-      }
+        },
+        {
+        "Sid": "SESv2EmailAccess",
+        "Effect": "Allow",
+        "Action": [
+          "sesv2:SendEmail",
+          "sesv2:SendBulkEmail",
+          "sesv2:GetAccount",
+          "sesv2:GetConfigurationSet",
+          "sesv2:GetEmailIdentity"
+        ],
+        "Resource": "*"
+        },
+        {
+        "Sid": "RDSAccess",
+        "Effect": "Allow",
+        "Action": [
+          "rds:DescribeDBInstances",
+          "rds:DescribeDBClusters"
+        ],
+        "Resource": "*"
+        }
     ]
   })
+}
+
+
+
+resource "aws_lambda_function" "scheduler_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
+
+    function_name = "c17-football-scheduler-lambda"
+    role          = aws_iam_role.lambda_role.arn
+
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.scheduler_image.image_uri
+
+    environment {
+        variables = {
+            DB_HOST=var.DATABASE_HOST
+            DB_PORT=var.DATABASE_PORT
+            DB_USER=var.DATABASE_USERNAME
+            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_NAME=var.DATABASE_NAME
+            TOPIC_REGION=var.AWS_REGION
+        }
+    }
+}
+
+
+resource "aws_lambda_function" "match_seeder_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
+
+    function_name = "c17-football-match-seeder-lambda"
+    role          = aws_iam_role.lambda_role.arn
+
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.match_seeder_image.image_uri
+
+    environment {
+        variables = {
+            DB_HOST=var.DATABASE_HOST
+            DB_PORT=var.DATABASE_PORT
+            DB_USER=var.DATABASE_USERNAME
+            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_NAME=var.DATABASE_NAME
+            TOPIC_REGION=var.AWS_REGION
+        }
+    }
+}
+
+resource "aws_lambda_function" "pipeline_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
+
+    function_name = "c17-football-pipeline-lambda"
+    role          = aws_iam_role.lambda_role.arn
+
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.pipeline_image.image_uri
+
+    environment {
+        variables = {
+            DB_HOST=var.DATABASE_HOST
+            DB_PORT=var.DATABASE_PORT
+            DB_USER=var.DATABASE_USERNAME
+            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_NAME=var.DATABASE_NAME
+            TOPIC_REGION=var.AWS_REGION
+        }
+    }
+}
+
+resource "aws_lambda_function" "notification_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
+
+    function_name = "c17-football-notification-lambda"
+    role          = aws_iam_role.lambda_role.arn
+
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.notification_image.image_uri
+
+    environment {
+        variables = {
+            DB_HOST=var.DATABASE_HOST
+            DB_PORT=var.DATABASE_PORT
+            DB_USER=var.DATABASE_USERNAME
+            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_NAME=var.DATABASE_NAME
+            TOPIC_ARN=aws_sns_topic.report-topic.arn
+
+        }
+    }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_role_attach" {
@@ -175,7 +320,7 @@ resource "aws_lambda_function" "report_lambda" {
     timeout = 120
     memory_size = 512
 
-    function_name = "c17-cattus-report-lambda"
+    function_name = "c17-football-report-lambda"
     role          = aws_iam_role.lambda_role.arn
 
     package_type = "Image"
@@ -189,55 +334,36 @@ resource "aws_lambda_function" "report_lambda" {
             DB_PASSWORD=var.DATABASE_PASSWORD
             DB_NAME=var.DATABASE_NAME
             TOPIC_REGION=var.AWS_REGION
-            TOPIC_ARN=aws_sns_topic.report-topic.arn
+            S3_BUCKET=aws_s3_bucket.s3_bucket.bucket
+
         }
     }
 }
 
-resource "aws_lambda_function" "short_pipeline_lambda" {
+resource "aws_lambda_function" "scheduler_stopper_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
     timeout = 120
     memory_size = 512
 
-    function_name = "c17-cattus-short-pipeline-lambda"
+    function_name = "c17-football-scheduler-stopper-lambda"
     role          = aws_iam_role.lambda_role.arn
 
     package_type = "Image"
-    image_uri = data.aws_ecr_image.short_pipe_image.image_uri
+    image_uri = data.aws_ecr_image.scheduler_stopper_image.image_uri
 
     environment {
         variables = {
-            DB_HOST=var.DB_HOST
-            DB_PORT=var.DB_PORT
-            DB_USER=var.DB_USER
-            DB_PASSWORD=var.DB_PASSWORD
-            DB_NAME=var.DB_NAME
-            DB_SCHEMA=var.DB_SCHEMA
+            DB_HOST=var.DATABASE_HOST
+            DB_PORT=var.DATABASE_PORT
+            DB_USER=var.DATABASE_USERNAME
+            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_NAME=var.DATABASE_NAME
+            TOPIC_REGION=var.AWS_REGION
             S3_BUCKET=aws_s3_bucket.s3_bucket.bucket
+
         }
     }
 }
 
-resource "aws_lambda_function" "long_pipeline_lambda" {
-    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-    timeout = 120
-    memory_size = 512
 
-    function_name = "c17-cattus-long-pipeline-lambda"
-    role          = aws_iam_role.lambda_role.arn
 
-    package_type = "Image"
-    image_uri = data.aws_ecr_image.long_pipe_image.image_uri
-
-    environment {
-        variables = {
-            DB_HOST=var.DB_HOST
-            DB_PORT=var.DB_PORT
-            DB_USER=var.DB_USER
-            DB_PASSWORD=var.DB_PASSWORD
-            DB_NAME=var.DB_NAME
-            DB_SCHEMA=var.DB_SCHEMA
-            S3_BUCKET=aws_s3_bucket.s3_bucket.bucket
-        }
-    }
-}
