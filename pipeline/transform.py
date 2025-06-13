@@ -283,19 +283,10 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    # api_token = ENV["TOKEN"]
-    # api_conn = HTTPSConnection("api.sportmonks.com")
-    # identify_match = 19411877
-    # api_data = run_extract(identify_match, api_token, api_conn)
-    # base_df = get_dataframe_from_response(api_data)
+    api_token = ENV["TOKEN"]
+    api_conn = HTTPSConnection("api.sportmonks.com")
+    identify_match = 19411877
+    api_data = run_extract(identify_match, api_token, api_conn)
+    base_df = get_dataframe_from_response(api_data)
 
-    base_df = get_dataframe_from_json("match_19387018/scrape_69.json")
-    base_df['request_timestamp'] = datetime.now(
-        timezone.utc).timestamp()  # temporary, to act as live data will
-
-    a, b, c = transform_data(base_df)
-    print("MINUTES", a, "\n")
-    print("EVENTS", b, "\n")
-    print("FLAGS", c, "\n")
-
-    # api_conn.close()
+    api_conn.close()
