@@ -72,15 +72,20 @@ def lambda_handler(event):
         logger.info("Received event: %s", event)
         home_team = event.get("home_team")
         away_team = event.get("away_team")
+        match_end = event.get("match_end")
 
-        if not all([home_team, away_team]):
-            raise ValueError("home_team and away_team are required")
+        if not all([home_team, away_team, match_end]):
+            raise ValueError("home_team, away_team and match end are required")
 
-        process_schedule_deletion(ENV, home_team, away_team)
-
+        if match_end == True:
+            process_schedule_deletion(ENV, home_team, away_team)
+            return {
+                "status_Code": 200,
+                "message": "Schedule deleted successfully"
+            }
         return {
             "status_Code": 200,
-            "message": "Schedule deleted successfully"
+            "message": "Game not ended yet"
         }
 
     except Exception as e:
