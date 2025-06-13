@@ -8,30 +8,6 @@ data "aws_vpc" "current-vpc" {
     id = var.CURRENT_VPC_ID
 }
 
-data "aws_iam_policy" "cloudwatch_full_access" {
-    arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-}
-
-data "aws_iam_policy" "ecr_full_access" {
-    arn = "arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicFullAccess"
-}
-
-data "aws_iam_policy" "RDS_full_access" {
-    arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
-}
-
-data "aws_iam_policy" "ecs_service" {
-    arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-data "aws_iam_policy" "ecs_full_access" {
-    arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
-}
-
-data "aws_ecs_cluster" "c17-ecs-cluster" {
-  cluster_name = "c17-ecs-cluster"
-}
-
 # RDS
 resource "aws_security_group" "db-security-group" {
     name = "c17-football-db-sg"
@@ -77,20 +53,20 @@ resource "aws_s3_object" "report_folder" {
 
 
 # SNS Topic
-# resource "aws_sns_topic" "report-topic" {
-#   name  = "c17-football-topic"
+resource "aws_sns_topic" "report-topic" {
+  name  = "c17-football-topic"
 
-#   tags = {
-#     Environment = "dev"
-#     Terraform   = "true"
-#   }
-# }
+  tags = {
+    Environment = "dev"
+    Terraform   = "true"
+  }
+}
 
-# resource "aws_sns_topic_subscription" "sms_subscription" {
-#   topic_arn = aws_sns_topic.report-topic.arn
-#   protocol    = "sms"
-#   endpoint    = "+15551234567"
-# }
+resource "aws_sns_topic_subscription" "sms_subscription" {
+  topic_arn = aws_sns_topic.report-topic.arn
+  protocol    = "sms"
+  endpoint    = "+15551234567"
+}
 
 
 # ECR
@@ -125,9 +101,7 @@ data "aws_ecr_image" "scheduler_stopper_image" {
 }
 
 
-
-# LAMBDA
-
+# LAMBDAS
 resource "aws_iam_role" "lambda_role" {
     name = "c17-football-lambda-role"
     assume_role_policy = jsonencode({
@@ -193,11 +167,7 @@ resource "aws_iam_policy" "lambda_policy" {
         "Sid": "SESv2EmailAccess",
         "Effect": "Allow",
         "Action": [
-          "sesv2:SendEmail",
-          "sesv2:SendBulkEmail",
-          "sesv2:GetAccount",
-          "sesv2:GetConfigurationSet",
-          "sesv2:GetEmailIdentity"
+          "sesv2:SendEmail"
         ],
         "Resource": "*"
         },
@@ -228,14 +198,7 @@ resource "aws_lambda_function" "scheduler_lambda" {
     image_uri = data.aws_ecr_image.scheduler_image.image_uri
 
     environment {
-        variables = {
-            DB_HOST=var.DATABASE_HOST
-            DB_PORT=var.DATABASE_PORT
-            DB_USER=var.DATABASE_USERNAME
-            DB_PASSWORD=var.DATABASE_PASSWORD
-            DB_NAME=var.DATABASE_NAME
-            TOPIC_REGION=var.AWS_REGION
-        }
+        variables = {}
     }
 }
 
@@ -281,7 +244,6 @@ resource "aws_lambda_function" "pipeline_lambda" {
             DB_USER=var.DATABASE_USERNAME
             DB_PASSWORD=var.DATABASE_PASSWORD
             DB_NAME=var.DATABASE_NAME
-            TOPIC_REGION=var.AWS_REGION
         }
     }
 }
@@ -366,9 +328,10 @@ resource "aws_lambda_function" "scheduler_stopper_lambda" {
 }
 
 
+# Eventbridge Scheduler
 
 resource "aws_iam_role" "scheduler_role" {
-  name = "EventBridgeSchedulerRole-c17-cattus"
+  name = "c17-football-daily"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
