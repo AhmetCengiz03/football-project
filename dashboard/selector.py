@@ -72,11 +72,11 @@ def create_match_selector():
     with st.sidebar:
         st.header("Match Selection")
 
-        all_matches = get_all_matches()
+        season_data = season_selection_filtering(get_all_matches())
 
-        season_data = season_selection_filtering(all_matches)
-
-        comp_data = competition_selection_filtering(season_data)
+        comp_data = competition_selection_filtering(
+            season_selection_filtering(get_all_matches())
+        )
 
         home_team, away_team = team_selection(comp_data)
 
