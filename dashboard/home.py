@@ -3,6 +3,7 @@ import streamlit as st
 import emoji
 import plotly.graph_objects as go
 
+
 # Temporary data
 matches_data = {
     "Arsenal vs Chelsea": {
@@ -24,9 +25,10 @@ matches_data = {
 }
 
 
-if __name__ == "__main__":
+st.set_page_config(layout="wide")
 
-    st.set_page_config(layout="wide")
+
+def main():
 
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
@@ -106,3 +108,6 @@ if __name__ == "__main__":
     with col3:
         st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
                     unsafe_allow_html=True)
+
+
+main()
