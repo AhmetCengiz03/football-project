@@ -17,14 +17,14 @@ def get_connection() -> connection:
         host=ENV["DB_HOST"],
         dbname=ENV["DB_NAME"],
         user=ENV["DB_USER"],
-        password=ENV["DB_PASSWORD"],
+        password=ENV["DB_PASS"],
         port=ENV["DB_PORT"]
     )
 
 
 def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> None:
     """Insert data from a pandas Dataframe into a PostgreSQL table"""
-    
+
     cursor = conn.cursor()
     columns = ", ".join(df.columns)
     values = df.to_records(index=False).tolist()
@@ -62,5 +62,12 @@ if __name__ == "__main__":
 
     base_df = get_dataframe_from_json("match_19387018/scrape_65.json")
     a, b, c = transform_data(base_df)
+    print(a.info())
+    a = a.drop(columns=["assists_away", "assists_home",
+               "goals_away", "goals_home", "substitutions_away", "substitutions_home", "yellowcards_away", "yellowcards_home", "redcards_away", "redcards_home"], errors="ignore")
+
+    db_conn = get_connection()
+    insert_dataframe(a, "match_minute_stats", db_conn)
+    db_conn.close()
 
     # upload_all_data(transformed_data)
