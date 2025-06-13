@@ -1,5 +1,5 @@
+"""Script to delete schedulers after a game has finished."""
 import logging
-from datetime import datetime
 from os import environ as ENV
 
 from re import sub
@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 
 def connect_to_scheduler_client(config: dict) -> client:
-    """Connects to the Eventbridge scheduler."""
+    """Connects to the EventBridge scheduler."""
     return client("scheduler", aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
                   aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
 
@@ -27,6 +27,7 @@ def format_team_codes(team_1: str, team_2: str) -> str:
 
 
 def get_schedule_groups(scheduler_client):
+    """Get the group names of the schedulers"""
     schedule_groups = []
     paginator = scheduler_client.get_paginator("list_schedule_groups")
     for page in paginator.paginate():
@@ -59,7 +60,7 @@ def process_schedule_deletion(config: dict, home_team: str, away_team: str):
     delete_scheduler(scheduler, schedule_name, group_names)
 
 
-def lambda_handler(event, context=None):
+def lambda_handler(event):
     """
         Main Lambda handler function
         Parameters:
@@ -68,7 +69,7 @@ def lambda_handler(event, context=None):
             Dictionary with status code and response body
     """
     try:
-        logger.info(f"Received event: {event}")
+        logger.info("Received event: %s", event)
         home_team = event.get("home_team")
         away_team = event.get("away_team")
 
@@ -95,6 +96,6 @@ def lambda_handler(event, context=None):
 
 if __name__ == "__main__":
     load_dotenv()
-    home_team = "home"
-    away_team = "away"
-    process_schedule_deletion(ENV, home_team, away_team)
+    HOME_TEAM = "home"
+    AWAY_TEAM = "away"
+    process_schedule_deletion(ENV, HOME_TEAM, AWAY_TEAM)
