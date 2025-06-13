@@ -5,6 +5,7 @@ from os import environ as ENV
 from re import sub
 from dotenv import load_dotenv
 from boto3 import client
+from json import dumps
 
 
 def configure_logger() -> logging.Logger:
@@ -73,7 +74,7 @@ def lambda_handler(event, context):
             Dictionary with status code and response body
     """
     try:
-        logger.info("Received event: %s", event)
+        logger.info("Received event: %s", dumps(event))
         home_team = event.get("home_team")
         away_team = event.get("away_team")
         match_end = event.get("match_end")
