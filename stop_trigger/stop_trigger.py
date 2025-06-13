@@ -76,11 +76,11 @@ def lambda_handler(event, context):
         if match_end == True:
             process_schedule_deletion(ENV, match_id, "c17-football")
             return {
-                "status_Code": 200,
+                "statusCode": 200,
                 "message": "Schedule deleted successfully"
             }
         return {
-            "status_Code": 200,
+            "statusCode": 200,
             "message": "Game not ended yet"
         }
 

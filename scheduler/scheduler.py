@@ -75,11 +75,12 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
 
 def manage_schedule_groups(scheduler_client: client, current_group: str, schedule_prefix: str) -> None:
     """Create current group and cleanup old ones."""
+    logger = configure_logger()
     try:
         scheduler_client.create_schedule_group(Name=current_group)
-        logging.info("Created schedule group: %s", current_group)
+        logger.info("Created schedule group: %s", current_group)
     except scheduler_client.exceptions.ConflictException:
-        logging.info("Schedule group %s already exists", current_group)
+        logger.info("Schedule group %s already exists", current_group)
 
     try:
         current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
@@ -97,14 +98,15 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
                         group_name not in keep_groups):
 
                     scheduler_client.delete_schedule_group(Name=group_name)
-                    logging.info("Deleted old schedule group: %s}", group_name)
+                    logger.info("Deleted old schedule group: %s}", group_name)
     except Exception as e:
-        logging.error("Error during group cleanup: %s", e)
+        logger.error("Error during group cleanup: %s", e)
 
 
 def create_match_schedule(scheduler_client: client, match: dict,
                           group_name: str, config: dict, schedule_prefix: str) -> None:
     """Create a single match schedule."""
+    logger = configure_logger()
     start_time = datetime.strptime(
         match["start_time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     end_time = start_time + timedelta(hours=3)
@@ -126,16 +128,14 @@ def create_match_schedule(scheduler_client: client, match: dict,
             State='ENABLED',
             Description=f"Schedule for fixture: {match['fixture_name']}"
         )
-        logging.info("Created schedule: %s", schedule_name)
+        logger.info("Created schedule: %s", schedule_name)
 
     except scheduler_client.exceptions.ConflictException:
-        logging.info("Schedule %s already exists", schedule_name)
+        logger.info("Schedule %s already exists", schedule_name)
 
 
 def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
     """Main processing function."""
-    configure_logger()
-
     tomorrow_date = (datetime.now(timezone.utc) +
                      timedelta(days=1)).strftime('%Y-%m-%d')
     group_name = f"{schedule_prefix}-{tomorrow_date}-fixtures"
