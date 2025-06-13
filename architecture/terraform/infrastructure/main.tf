@@ -367,3 +367,52 @@ resource "aws_lambda_function" "scheduler_stopper_lambda" {
 
 
 
+resource "aws_iam_role" "scheduler_role" {
+  name = "EventBridgeSchedulerRole-c17-cattus"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+        {
+            Action = "sts:AssumeRole"
+            Effect = "Allow"
+            Principal = {
+                Service = "scheduler.amazonaws.com"
+            }
+        }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_invoke_policy" {
+  name = "EventBridgeInvokePolicy"
+  role = aws_iam_role.scheduler_role.id
+  policy = jsonencode({
+    "Version"   : "2012-10-17",
+    "Statement" : [
+        {
+            "Sid"       : "AllowEventBridgeToInvokeLambda",
+            "Action"    : ["lambda:InvokeFunction"],
+            "Effect"    : "Allow",
+            "Resource"  : [
+              aws_lambda_function.scheduler.arn
+            ]
+        }
+    ] 
+  })
+}
+
+resource "aws_scheduler_schedule" "daily_schedule" {
+  name       = "c17-football-daily-schedule"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression =  "cron(50 23 * * ? *)"
+
+  target {
+    arn      = aws_lambda_function.scheduler_lambda.arn
+    role_arn = aws_iam_role.scheduler_role.arn
+  }
+}
