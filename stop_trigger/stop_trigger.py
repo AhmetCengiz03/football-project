@@ -43,7 +43,7 @@ def get_schedule_groups(scheduler_client: client, schedule_prefix: str) -> list[
     return schedule_groups
 
 
-def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[str]) -> None:
+def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[str], logger: logging.Logger) -> None:
     """Delete the specified scheduler."""
     for group_name in group_names:
         try:
@@ -52,17 +52,17 @@ def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[st
             logging.info("Deleted schedule: %s", schedule_name)
         except scheduler.exceptions.ResourceNotFoundException:
             logging.info("Could not find and delete: %s", schedule_name)
+    return True
 
 
-def process_schedule_deletion(config: dict, home_team: str, away_team: str, schedule_prefix: str) -> None:
+def process_schedule_deletion(config: dict, home_team: str, away_team: str, schedule_prefix: str, logger: logging.Logger) -> None:
     """Main processing function."""
-    configure_logger()
     scheduler = client("scheduler", aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
                        aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
     group_names = get_schedule_groups(scheduler, schedule_prefix)
     formatted_codes = format_team_names(home_team, away_team)
     schedule_name = f"{schedule_prefix}-{formatted_codes}"
-    delete_scheduler(scheduler, schedule_name, group_names)
+    delete_scheduler(scheduler, schedule_name, group_names, logger)
 
 
 def lambda_handler(event, context):
@@ -73,6 +73,7 @@ def lambda_handler(event, context):
         Returns:
             Dictionary with status code and response body
     """
+    logger = configure_logger()
     try:
         logger.info("Received event: %s", dumps(event))
         home_team = event.get("home_team")
@@ -84,7 +85,7 @@ def lambda_handler(event, context):
 
         if match_end == True:
             process_schedule_deletion(
-                ENV, home_team, away_team, "c17-football")
+                ENV, home_team, away_team, "c17-football", logger)
             return {
                 "status_Code": 200,
                 "message": "Schedule deleted successfully"
