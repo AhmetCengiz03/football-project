@@ -1,11 +1,19 @@
 """Loading to database."""
 from os import environ as ENV
+import logging
 
 from dotenv import load_dotenv
 import pandas as pd
 import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.extensions import connection
+
+
+def configure_logger() -> logging.Logger:
+    """Sets up the logger."""
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    return logger
 
 
 def get_connection() -> connection:
@@ -30,9 +38,10 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> Non
         with conn.cursor() as cursor:
             execute_values(cursor, insert_query, values)
             conn.commit()
+            logging.info("Successfully inserted data into %s", table_name)
     except psycopg2.Error as e:
         conn.rollback()
-        print(f"Error inserting data: {e}")
+        logging.error("Error inserting data: %s", str(e))
 
 
 def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
@@ -55,4 +64,5 @@ def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
 
 if __name__ == "__main__":
     load_dotenv()
+    configure_logger()
     upload_all_data(transformed_data)
