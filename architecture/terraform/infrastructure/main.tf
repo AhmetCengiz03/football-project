@@ -39,7 +39,6 @@ resource "aws_db_instance" "football-db" {
 }
 
 # S3 BUCKET
-
 resource "aws_s3_bucket" "s3_bucket" {
     bucket = "c17-football-report-bucket"
     force_destroy = true
@@ -65,7 +64,7 @@ resource "aws_sns_topic" "report-topic" {
 resource "aws_sns_topic_subscription" "sms_subscription" {
   topic_arn = aws_sns_topic.report-topic.arn
   protocol    = "sms"
-  endpoint    = "+15551234567"
+  endpoint    = "+447983279191"
 }
 
 
@@ -155,12 +154,6 @@ resource "aws_iam_policy" "lambda_policy" {
         "Sid": "PublishSNSMessage",
         "Effect": "Allow",
         "Action": "sns:Publish",
-        "Resource": aws_sns_topic.report-topic.arn
-        },
-        {
-        "Sid": "PublishSESMessage",
-        "Effect": "Allow",
-        "Action": "ses:Publish",
         "Resource": aws_sns_topic.report-topic.arn
         },
         {
@@ -329,7 +322,6 @@ resource "aws_lambda_function" "scheduler_stopper_lambda" {
 
 
 # Eventbridge Scheduler
-
 resource "aws_iam_role" "scheduler_role" {
   name = "c17-football-daily"
   assume_role_policy = jsonencode({
@@ -357,7 +349,7 @@ resource "aws_iam_role_policy" "eventbridge_invoke_policy" {
             "Action"    : ["lambda:InvokeFunction"],
             "Effect"    : "Allow",
             "Resource"  : [
-              aws_lambda_function.scheduler.arn
+              aws_lambda_function.scheduler_lambda.arn
             ]
         }
     ] 
