@@ -2,10 +2,9 @@
 """Test script for stop trigger for scheduler."""
 
 import pytest
-from stop_trigger import format_team_names
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock
 
-from stop_trigger import get_schedule_groups, delete_scheduler
+from stop_trigger import get_schedule_groups, delete_scheduler, format_team_names
 
 
 def test_format_team_codes_valid_codes():
@@ -24,8 +23,8 @@ def test_format_team_names_long_names_truncated():
 
 
 def test_get_schedule_groups_success():
-    mock_client = Mock()
-    mock_paginator = Mock()
+    mock_client = MagicMock()
+    mock_paginator = MagicMock()
     mock_client.get_paginator.return_value = mock_paginator
 
     mock_paginator.paginate.return_value = [
@@ -48,9 +47,9 @@ def test_get_schedule_groups_success():
     assert result == expected
 
 
-def test_delete_scheduler_success_first_group():
-    mock_client = Mock()
-    mock_logger = Mock()
+def test_delete_scheduler_success():
+    mock_client = MagicMock()
+    mock_logger = MagicMock()
     result = delete_scheduler(
         mock_client,
         "test-schedule",
