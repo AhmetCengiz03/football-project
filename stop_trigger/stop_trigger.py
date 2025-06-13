@@ -64,7 +64,7 @@ def lambda_handler(event):
     """
         Main Lambda handler function
         Parameters:
-            event: Dict containing home and away teams
+            event: Dict containing home_team, away team and match_end flag
         Returns:
             Dictionary with status code and response body
     """
