@@ -27,7 +27,7 @@ def format_team_codes(team_1: str, team_2: str) -> str:
 
 
 def get_schedule_groups(scheduler_client):
-    """Get the group names of the schedulers"""
+    """Get the group names of the schedulers."""
     schedule_groups = []
     paginator = scheduler_client.get_paginator("list_schedule_groups")
     for page in paginator.paginate():
@@ -40,7 +40,7 @@ def get_schedule_groups(scheduler_client):
 
 
 def delete_scheduler(scheduler, schedule_name, group_names):
-    """Delete the specified scheduler,"""
+    """Delete the specified scheduler."""
     for group_name in group_names:
         try:
             scheduler.delete_schedule(Name=schedule_name,
