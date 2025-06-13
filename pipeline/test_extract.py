@@ -12,7 +12,8 @@ def test_prepare_data_removes_keys():
     data = {
         "rate_limit": {"calls_left": 2999},
         "subscription": {"plan": "worldwide"},
-        "timezone": "UTC"
+        "timezone": "UTC",
+        "data": {}
     }
     prepared_data = prepare_data(data)
 
@@ -25,11 +26,12 @@ def test_prepare_data_adds_timestamp():
     data = {
         "rate_limit": {"calls_left": 2999},
         "subscription": {"plan": "worldwide"},
-        "timezone": "UTC"
+        "timezone": "UTC",
+        "data": {}
     }
     prepared_data = prepare_data(data)
 
-    assert "timestamp" in prepared_data["rate_limit"]
+    assert "request_timestamp" in prepared_data["data"]
 
 
 def test_prepare_data_raises_keyerror():
