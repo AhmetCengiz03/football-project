@@ -7,21 +7,24 @@ import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.extensions import connection
 
+from transform import get_dataframe_from_json, transform_data
+
 
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
-    conn = psycopg2.connect(
-        host=ENV("DB_HOST"),
-        dbname=ENV("DB_NAME"),
-        user=ENV("DB_USER"),
-        password=ENV("DB_PASSWORD"),
-        port=ENV("DB_PORT")
+
+    return psycopg2.connect(
+        host=ENV["DB_HOST"],
+        dbname=ENV["DB_NAME"],
+        user=ENV["DB_USER"],
+        password=ENV["DB_PASSWORD"],
+        port=ENV["DB_PORT"]
     )
-    return conn
 
 
 def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> None:
     """Insert data from a pandas Dataframe into a PostgreSQL table"""
+    
     cursor = conn.cursor()
     columns = ", ".join(df.columns)
     values = df.to_records(index=False).tolist()
@@ -54,5 +57,10 @@ def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
 
 
 if __name__ == "__main__":
+
     load_dotenv()
-    upload_all_data(transformed_data)
+
+    base_df = get_dataframe_from_json("match_19387018/scrape_65.json")
+    a, b, c = transform_data(base_df)
+
+    # upload_all_data(transformed_data)
