@@ -1,10 +1,9 @@
 """Script to run the load phase of this pipeline."""
-from typing import Dict
 
 from extract_transform import get_db_connection
 
 
-def insert_team(cur, team: Dict) -> None:
+def insert_team(cur, team: dict) -> None:
     """Inserts a team record into the database if it doesn't 
     already exist."""
 
@@ -73,7 +72,7 @@ def insert_match_assignment(cur, match_id: int, competition_name: str, season_na
     """, (match_id, competition_id, season_id))
 
 
-def load_master_data(master_data: Dict) -> None:
+def load_master_data(master_data: dict) -> None:
     """Loads validated match master data into the RDS PostgreSQL database.
     Inserts team, competition, season, match, and match_assignment data."""
     conn = get_db_connection()

@@ -1,11 +1,12 @@
-import os
 import json
 import logging
+
+from json import dumps
+
+from dotenv import load_dotenv
+
 from extract_transform import validate_and_transform_data
 from load_data import load_master_data
-
-import requests
-from dotenv import load_dotenv
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -25,7 +26,7 @@ def lambda_handler(event, context):
 
         return {
             "statusCode": 200,
-            "body": json.dumps({
+            "body": dumps({
                 "message": "Initial match data processed and inserted successfully.",
                 "match_id": transformed_data["match_id"]
             })

@@ -1,16 +1,17 @@
-"""Script that validates the received dictionary, 
-checks if any of the data already exists in the RDS 
-otherwise fetches the relevant data from the API."""
-import psycopg2
+"""Validates and transforms match data, checking for existing
+records in the database or fetching from the API if missing."""
 from datetime import datetime, timezone
-from typing import Dict, Tuple, List
 from http.client import HTTPSConnection
 from json import loads
 from os import environ as ENV
+
 from dotenv import load_dotenv
 
+import psycopg2
+from psycopg2.extensions import connection
 
-def get_db_connection() -> psycopg2.extensions.connection:
+
+def get_db_connection() -> connection:
     """Creates and returns a connection to the PostgreSQL
     database using environment variables."""
     return psycopg2.connect(
@@ -22,7 +23,7 @@ def get_db_connection() -> psycopg2.extensions.connection:
     )
 
 
-def validate_required_values(event: Dict) -> None:
+def validate_required_values(event: dict) -> None:
     """Validates that all required top-level fields are present in the event."""
     required_keys = ["match_id", "league_id", "season_id",
                      "start_time", "location", "team_data"]
@@ -32,7 +33,7 @@ def validate_required_values(event: Dict) -> None:
             raise ValueError(f"Missing field: {key}.")
 
 
-def validate_team_data(team_data: List[Dict]) -> Tuple[Dict, Dict]:
+def validate_team_data(team_data: list[dict]) -> tuple[dict, dict]:
     """Checks that team_data contains two teams."""
     if not isinstance(team_data, list) or len(team_data) != 2:
         raise ValueError("Team data must contain exactly two teams.")
@@ -40,15 +41,16 @@ def validate_team_data(team_data: List[Dict]) -> Tuple[Dict, Dict]:
     return team_data[0], team_data[1]
 
 
-def get_home_away_team(team: Dict, location: str) -> Dict | None:
+def get_home_away_team(team: dict, location: str) -> dict | None:
     """Returns the team dict if its location matches 'home' or 'away'."""
     for key in team:
         if "location" in key and team[key] == location:
             return team
+
     return None
 
 
-def extract_team_info(team: Dict) -> Dict:
+def extract_team_info(team: dict) -> dict:
     """Extracts team fields based on whether it's team_1 or team_2."""
     team_prefix = "team_1" if "team_1_team_id" in team else "team_2"
 
@@ -60,15 +62,15 @@ def extract_team_info(team: Dict) -> Dict:
     }
 
 
-def validate_timestamp(ts: str) -> None:
+def validate_timestamp(timestamp: str) -> None:
     """Validates that the timestamp is a valid ISO format string and in UTC."""
     try:
-        if ts.endswith("Z"):
-            ts = ts.replace("Z", "+00:00")
-        dt = datetime.fromisoformat(ts)
+        if timestamp.endswith("Z"):
+            timestamp = timestamp.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(timestamp)
         if dt.utcoffset() != timezone.utc.utcoffset(dt):
             raise ValueError("Timestamp must be in UTC (offset +00:00).")
-    except Exception:
+    except (ValueError, TypeError):
         raise ValueError("Invalid 'start_time' timestamp format.")
 
 
@@ -99,16 +101,15 @@ def fetch_entity_name_from_api(entity: str, entity_id: int) -> str:
 
 
 def get_entity_name_if_exists(cur, table: str, entity_id: int, id_col: str, name_col: str) -> str | None:
-    """
-    Checks if an entity exists in the DB and returns its name if found.
-    """
+    """Checks if an entity exists in the DB and returns its name if found."""
     query = f"SELECT {name_col} FROM {table} WHERE {id_col} = %s"
     cur.execute(query, (entity_id,))
     result = cur.fetchone()
+
     return result[0] if result else None
 
 
-def validate_and_transform_data(event: Dict) -> Dict:
+def validate_and_transform_data(event: dict) -> dict:
     """Validates and extracts structured match data from the event."""
     load_dotenv()
     validate_required_values(event)
