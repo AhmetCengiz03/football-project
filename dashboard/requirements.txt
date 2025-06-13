@@ -1,3 +1,10 @@
 pylint
 pytest
 pytest-cov
+streamlit
+plotly
+numpy
+scipy
+python-dotenv
+psycopg2-binary
+pandas
