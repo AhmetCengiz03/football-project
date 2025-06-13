@@ -51,7 +51,17 @@ STATS_COLUMNS = [
     "throwins_away",
     "throwins_home",
     "total_crosses_away",
-    "total_crosses_home"
+    "total_crosses_home",
+    "assists_away",
+    "assists_home",
+    "goals_away",
+    "goals_home",
+    "substitutions_away",
+    "substitutions_home",
+    "yellowcards_away",
+    "yellowcards_home",
+    "redcards_away",
+    "redcards_home"
 ]
 
 BULK_COLUMNS = [

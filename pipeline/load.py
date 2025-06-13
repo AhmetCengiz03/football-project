@@ -28,7 +28,7 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> Non
     cursor = conn.cursor()
     columns = ", ".join(df.columns)
     values = df.to_records(index=False).tolist()
-    insert_query = f"INSERT INTO {table_name} ({columns}) VALUES (%s)"
+    insert_query = f"INSERT INTO {table_name} ({columns}) VALUES %s"
     try:
         with conn.cursor() as cursor:
             execute_values(cursor, insert_query, values)
@@ -41,6 +41,7 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> Non
 def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
     """Upload transformed data to all relevant tables."""
     conn = get_connection()
+
     for table in [
         "team",
         "competition",
@@ -56,15 +57,15 @@ def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
     conn.close()
 
 
+
+
 if __name__ == "__main__":
 
     load_dotenv()
 
-    base_df = get_dataframe_from_json("match_19387018/scrape_65.json")
+    base_df = get_dataframe_from_json("match_19367875/scrape_21.json")
     a, b, c = transform_data(base_df)
     print(a.info())
-    a = a.drop(columns=["assists_away", "assists_home",
-               "goals_away", "goals_home", "substitutions_away", "substitutions_home", "yellowcards_away", "yellowcards_home", "redcards_away", "redcards_home"], errors="ignore")
 
     db_conn = get_connection()
     insert_dataframe(a, "match_minute_stats", db_conn)
