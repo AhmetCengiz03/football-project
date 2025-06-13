@@ -24,7 +24,7 @@ data "aws_iam_policy" "RDS_full_access" {
 
 # RDS
 resource "aws_security_group" "db-security-group" {
-    name = "museum-db-sg"
+    name = "c17-football-db-sg"
     vpc_id = var.CURRENT_VPC_ID
 }
 
@@ -36,11 +36,11 @@ resource "aws_vpc_security_group_ingress_rule" "db-sg-inbound-rule" {
     ip_protocol = "tcp"
 }
 
-resource "aws_db_instance" "museum-db" {
+resource "aws_db_instance" "football-db" {
     allocated_storage = 10
     db_name = var.DATABASE_NAME
     engine = "postgres"
-    identifier = "museum-db"
+    identifier = "c17-football-db"
     engine_version = "17.2"
     instance_class = "db.t3.micro"
     publicly_accessible = true
@@ -53,32 +53,32 @@ resource "aws_db_instance" "museum-db" {
 }
 
 # ECR
-data "aws_ecr_image" "scheduler_image" {
-    repository_name = "c17-football-scheduler-ecr"
-    image_tag = "latest"
-}
+# data "aws_ecr_image" "scheduler_image" {
+#     repository_name = "c17-football-scheduler-ecr"
+#     image_tag = "latest"
+# }
 
-data "aws_ecr_image" "match_seeder_image" {
-    repository_name = "c17-football-match-seeder-ecr"
-    image_tag = "latest"
-}
+# data "aws_ecr_image" "match_seeder_image" {
+#     repository_name = "c17-football-match-seeder-ecr"
+#     image_tag = "latest"
+# }
 
-data "aws_ecr_image" "pipeline_image" {
-    repository_name = "c17-football-pipeline-ecr"
-    image_tag = "latest"
-}
+# data "aws_ecr_image" "pipeline_image" {
+#     repository_name = "c17-football-pipeline-ecr"
+#     image_tag = "latest"
+# }
 
-data "aws_ecr_image" "notification_image" {
-    repository_name = "c17-football-notification-ecr"
-    image_tag = "latest"
-}
+# data "aws_ecr_image" "notification_image" {
+#     repository_name = "c17-football-notification-ecr"
+#     image_tag = "latest"
+# }
 
-data "aws_ecr_image" "report_image" {
-    repository_name = "c17-football-report-ecr"
-    image_tag = "latest"
-}
+# data "aws_ecr_image" "report_image" {
+#     repository_name = "c17-football-report-ecr"
+#     image_tag = "latest"
+# }
 
-data "aws_ecr_image" "scheduler_stopper_image" {
-    repository_name = "c17-football-scheduler-stopper-ecr"
-    image_tag = "latest"
-}
+# data "aws_ecr_image" "scheduler_stopper_image" {
+#     repository_name = "c17-football-scheduler-stopper-ecr"
+#     image_tag = "latest"
+# }
