@@ -171,6 +171,7 @@ def lambda_handler(event, context):
     Returns:
         Dictionary with status code and response body
     """
+    load_dotenv()
     return process_daily_schedules(ENV, 'c17-football')
 
 

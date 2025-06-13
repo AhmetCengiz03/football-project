@@ -64,6 +64,7 @@ def lambda_handler(event, context):
             Dictionary with status code and response body
     """
     try:
+        load_dotenv()
         logger = configure_logger()
         logger.info("Received event: %s", dumps(event))
         match_end = event.get("match_end")
