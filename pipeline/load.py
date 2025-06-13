@@ -9,7 +9,7 @@ from psycopg2.extras import execute_values
 from psycopg2.extensions import connection
 
 
-def configure_logger() -> logging.Logger:
+def configure_logger() -> None:
     """Sets up the logger."""
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -38,10 +38,10 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, conn: connection) -> Non
         with conn.cursor() as cursor:
             execute_values(cursor, insert_query, values)
             conn.commit()
-            logging.info("Successfully inserted data into %s", table_name)
+            logger.info("Successfully inserted data into %s", table_name)
     except psycopg2.Error as e:
         conn.rollback()
-        logging.error("Error inserting data: %s", str(e))
+        logger.error("Error inserting data: %s", str(e))
 
 
 def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
@@ -64,5 +64,5 @@ def upload_all_data(transformed_data: dict[str, pd.DataFrame]) -> None:
 
 if __name__ == "__main__":
     load_dotenv()
-    configure_logger()
+    logger = configure_logger()
     upload_all_data(transformed_data)
