@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
 
 from scheduler import (
-    get_all_daily_fixtures, get_data_from_fixtures,
-    format_team_codes, create_match_schedule,
+    get_data_from_fixtures,
+    format_team_names, create_match_schedule,
     manage_schedule_groups
 )
 
@@ -14,31 +14,27 @@ from scheduler import (
 def test_format_team_codes_valid_codes(sample_fixture_data):
     participants = sample_fixture_data[0]["participants"]
     team_1 = {
-        "team_1_code": participants[0]["short_code"],
         "team_1_name": participants[0]["name"]
     }
     team_2 = {
-        "team_2_code": participants[1]["short_code"],
         "team_2_name": participants[1]["name"]
     }
 
-    formatted = format_team_codes(team_1, team_2)
-    assert formatted == "afc-bfc"
+    formatted = format_team_names(team_1, team_2)
+    assert formatted == "teama-teamb"
 
 
-def test_format_team_codes_no_team_code(sample_fixture_data):
+def test_format_team_codes_no_team_name(sample_fixture_data):
     participants = sample_fixture_data[0]["participants"]
     team_1 = {
-        "team_1_code": None,
-        "team_1_name": participants[0]["name"]
+        "team_1_name": None
     }
     team_2 = {
-        "team_2_code": participants[1]["short_code"],
         "team_2_name": participants[1]["name"]
     }
 
-    formatted = format_team_codes(team_1, team_2)
-    assert formatted == "teama-bfc"
+    formatted = format_team_names(team_1, team_2)
+    assert formatted == "unknown-teamb"
 
 
 @patch("scheduler.get_all_daily_fixtures")
@@ -72,11 +68,12 @@ def test_create_match_schedule_success(sample_fixture_data, config):
     }
     group_name = "c17-football-2025-06-13-fixtures"
 
-    create_match_schedule(scheduler_client, match, group_name, config)
+    create_match_schedule(scheduler_client, match,
+                          group_name, config, 'c17-football')
     assert scheduler_client.create_schedule.called
     schedule = scheduler_client.create_schedule.call_args[1]
     assert schedule["Name"].startswith(
-        "c17-football-afc-bfc")
+        "c17-football-teama-teamb")
     assert schedule["GroupName"] == group_name
     assert schedule["ScheduleExpression"] == 'cron(* * * * ? *)'
 
@@ -96,7 +93,7 @@ def test_manage_schedule_groups_deletes_old():
     }]
 
     manage_schedule_groups(
-        scheduler_client, f"c17-football-{tomorrow}-fixtures")
+        scheduler_client, f"c17-football-{tomorrow}-fixtures", 'c17-football')
     assert scheduler_client.delete_schedule_group.called
     assert scheduler_client.delete_schedule_group.call_args[
         1]["Name"] == "c17-football-2024-01-01-fixtures"
