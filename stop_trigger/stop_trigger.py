@@ -1,17 +1,10 @@
 """Script to delete schedulers after a game has finished."""
-import logging
+from logging import getLogger
 from os import environ as ENV
 from json import dumps
 
 from dotenv import load_dotenv
 from boto3 import client
-
-
-def configure_logger() -> logging.Logger:
-    """Sets up the logger."""
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    return logger
 
 
 def connect_to_scheduler_client(config: dict) -> client:
@@ -35,7 +28,7 @@ def get_schedule_groups(scheduler_client: client, schedule_prefix: str) -> list[
 
 def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[str]) -> None:
     """Delete the specified scheduler."""
-    logger = configure_logger()
+    logger = getLogger()
     for group_name in group_names:
         try:
             scheduler.delete_schedule(Name=schedule_name,
@@ -47,7 +40,6 @@ def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[st
 
 def process_schedule_deletion(config: dict, match_id: int, schedule_prefix: str) -> None:
     """Main processing function."""
-    configure_logger()
     scheduler = client("scheduler", aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
                        aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
     group_names = get_schedule_groups(scheduler, schedule_prefix)
@@ -65,7 +57,7 @@ def lambda_handler(event, context):
     """
     try:
         load_dotenv()
-        logger = configure_logger()
+        logger = getLogger()
         logger.info("Received event: %s", dumps(event))
         match_end = event.get("match_end")
         match_id = event.get("match_id")
