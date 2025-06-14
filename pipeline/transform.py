@@ -14,6 +14,8 @@ STATS_COLUMNS = [
     "accurate_crosses_away",
     "accurate_crosses_home",
     "ball_possession_away",
+    "ball_safe_away",
+    "ball_safe_home",
     "big_chances_created_away",
     "big_chances_created_home",
     "big_chances_missed_away",
@@ -28,10 +30,14 @@ STATS_COLUMNS = [
     "goal_attempts_home",
     "goal_kicks_away",
     "goal_kicks_home",
+    "injuries_away",
+    "injuries_home",
     "interceptions_away",
     "interceptions_home",
     "long_passes_away",
     "long_passes_home",
+    "offsides_away",
+    "offsides_home",
     "shots_blocked_away",
     "shots_blocked_home",
     "shots_off_target_away",
@@ -40,12 +46,24 @@ STATS_COLUMNS = [
     "successful_dribbles_percentage_home",
     "successful_dribbles_away",
     "successful_dribbles_home",
+    "successful_headers_away",
+    "successful_headers_home",
     "successful_passes_percentage_home",
     "successful_passes_percentage_away",
     "throwins_away",
     "throwins_home",
     "total_crosses_away",
-    "total_crosses_home"
+    "total_crosses_home",
+    "assists_away",
+    "assists_home",
+    "goals_away",
+    "goals_home",
+    "substitutions_away",
+    "substitutions_home",
+    "yellowcards_away",
+    "yellowcards_home",
+    "redcards_away",
+    "redcards_home"
 ]
 
 BULK_COLUMNS = [
@@ -247,7 +265,11 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df = drop_bulk_columns(df, BULK_COLUMNS)
     df_map = get_type_mapping("types_map_api.xlsx")
     df_match_event = get_match_event_df(df)
-    df_events = prepare_events(df_match_event, EVENT_COLUMNS, df_map)
+
+    if df_match_event.empty:
+        df_events = df_match_event
+    else:
+        df_events = prepare_events(df_match_event, EVENT_COLUMNS, df_map)
 
     df_stats = append_period_to_statistics(df, get_statistics(df))
 
@@ -255,6 +277,8 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df_minute = drop_unwanted_stats(df_minute, STATS_COLUMNS)
     df_minute = df_minute.rename(columns={
         "ball_possession_home": "possession_home",
+        "dangerous_attacks_away": "danger_attacks_away",
+        "dangerous_attacks_home": "danger_attacks_home",
         "shots_insidebox_home": "shots_inside_home",
         "shots_insidebox_away": "shots_inside_away",
         "shots_outsidebox_home": "shots_outside_home",
