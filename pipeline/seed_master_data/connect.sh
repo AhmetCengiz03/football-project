@@ -1,2 +1,3 @@
 source .env
-psql -U $DB_USER -h $DB_HOST $DB_NAME -p $DB_PORT $DB_NAME
+
+PGPASSWORD=$DB_PASSWORD psql -U $DB_USER -h $DB_HOST $DB_NAME -p $DB_PORT $DB_NAME

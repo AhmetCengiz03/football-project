@@ -15,26 +15,26 @@ def insert_team(conn: connection, team: dict) -> None:
         cur.close()
 
 
-def insert_competition(conn: connection, name: str) -> None:
+def insert_competition(conn: connection, competition_id: int, name: str) -> None:
     """Inserts a competition record into the database if 
     it doesn't already exist."""
     with conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO competition (competition_name)
+            INSERT INTO competition (competition_id, competition_name)
             VALUES (%s)
-            ON CONFLICT (competition_name) DO NOTHING;
-        """, (name,))
+            ON CONFLICT (competition_id) DO NOTHING;
+        """, (competition_id, name))
         cur.close()
 
 
-def insert_season(conn: connection, name: str) -> None:
+def insert_season(conn: connection, season_id: int, name: str) -> None:
     """Inserts a season record into the database if it does not already exist."""
     with conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO season (season_name)
-            VALUES (%s)
-            ON CONFLICT (season_name) DO NOTHING;
-        """, (name,))
+            INSERT INTO season (season_id, season_name)
+            VALUES (%s, %s)
+            ON CONFLICT (season_id) DO NOTHING;
+        """, (season_id, name))
         cur.close()
 
 
@@ -49,32 +49,14 @@ def insert_match(conn: connection, match_id: int, home_team_id: int, away_team_i
         cur.close()
 
 
-def insert_match_assignment(conn: connection, match_id: int, competition_name: str, season_name: str) -> None:
-    """Inserts a match assignment record with the fetched 
-    competition_id and season_id new match_id."""
+def insert_match_assignment(conn: connection, match_id: int, competition_id: int, season_id: int) -> None:
+    """Inserts a match assignment record with the provided IDs."""
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT competition_id FROM competition WHERE competition_name = %s;
-        """, (competition_name,))
-        competition_id = cur.fetchone()
-        if not competition_id:
-            raise ValueError(
-                f"Competition '{competition_name}' not found in DB.")
-        competition_id = competition_id[0]
-
-        cur.execute("""
-            SELECT season_id FROM season WHERE season_name = %s;
-        """, (season_name,))
-        season_id = cur.fetchone()
-        if not season_id:
-            raise ValueError(f"Season '{season_name}' not found in DB.")
-        season_id = season_id[0]
-
-        cur.execute("""
             INSERT INTO match_assignment (match_id, competition_id, season_id)
-            VALUES (%s, %s, %s);
+            VALUES (%s, %s, %s)
+            ON CONFLICT (match_id, competition_id, season_id) DO NOTHING;
         """, (match_id, competition_id, season_id))
-        cur.close()
 
 
 def load_master_data(master_data: dict, conn: connection) -> None:
@@ -86,9 +68,11 @@ def load_master_data(master_data: dict, conn: connection) -> None:
     if master_data["insert_away_team"]:
         insert_team(conn, master_data["away_team"])
     if master_data["insert_competition"]:
-        insert_competition(conn, master_data["competition_name"])
+        insert_competition(
+            conn, master_data["competition_id"], master_data["competition_name"])
     if master_data["insert_season"]:
-        insert_season(conn, master_data["season_name"])
+        insert_season(conn, master_data["season_id"],
+                      master_data["season_name"])
 
     insert_match(
         conn,
@@ -98,7 +82,10 @@ def load_master_data(master_data: dict, conn: connection) -> None:
         master_data["match_date"]
     )
     insert_match_assignment(
-        conn, master_data["match_id"], master_data["competition_name"], master_data["season_name"]
+        conn,
+        master_data["match_id"],
+        master_data["competition_id"],
+        master_data["season_id"]
     )
 
     conn.commit()
