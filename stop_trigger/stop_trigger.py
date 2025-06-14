@@ -68,18 +68,18 @@ def lambda_handler(event, context):
         if match_end == True:
             process_schedule_deletion(ENV, match_id, "c17-football")
             return {
-                "statusCode": 200,
+                "status_code": 200,
                 "message": "Schedule deleted successfully"
             }
         return {
-            "statusCode": 200,
+            "status_code": 200,
             "message": "Game not ended yet"
         }
 
     except Exception as e:
         logger.error("Error in lambda_handler: %s", str(e))
         return {
-            "statusCode": 500,
+            "status_code": 500,
             "body": {
                 "error": str(e),
                 "message": "Failed to delete schedule"
