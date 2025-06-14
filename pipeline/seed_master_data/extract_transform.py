@@ -90,11 +90,11 @@ def fetch_entity_name(entity: str, entity_id: int) -> str:
 
 def check_entity_in_db(conn: connection, table: str,  id_col: str, name_col: str, entity_id: int) -> str | None:
     """Checks if an entity exists in the DB and returns its name if found."""
-    with conn.cursor as cur:
+    with conn.cursor() as cur:
         query = f"SELECT {name_col} FROM {table} WHERE {id_col} = %s"
         cur.execute(query, (entity_id,))
         result = cur.fetchone()
-    cur.close()
+        cur.close()
     return result[0] if result else None
 
 

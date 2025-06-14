@@ -51,34 +51,15 @@ def lambda_handler(event, context):
 
 
 if __name__ == "__main__":
-
-    """
+    event = {'match_id': 19390974, 'league_id': 651, 'season_id': 25185, 'fixture_name': 'Vila Nova vs América Mineiro', 'start_time': '2025-06-13 22:00:00', 'team_data': [{'team_1_team_id': 11941, 'team_1_name': 'Vila Nova', 'team_1_code': None, 'team_1_image': 'https://cdn.sportmonks.com/images/soccer/teams/5/11941.png', 'team_1_location': 'home'}, {
+        'team_2_team_id': 6325, 'team_2_name': 'América Mineiro', 'team_2_code': None, 'team_2_image': 'https://cdn.sportmonks.com/images/soccer/teams/21/6325.png', 'team_2_location': 'away'}]}
     load_dotenv()
+    logger = getLogger()
+    logger.info("Received match info")
+    conn = get_db_connection(ENV)
 
-    mock_event = {
-        "match_id": 19367875,
-        "league_id": 1034,
-        "season_id": 25044,
-        "fixture_name": "Gwangju vs Seoul",
-        "start_time": "2025-06-13 10:30:00",
-        "team_data": [
-            {
-                "team_1_team_id": 4370,
-                "team_1_name": "Gwangju",
-                "team_1_code": None,
-                "team_1_image": "https://cdn.sportmonks.com/images/soccer/teams/18/4370.png",
-                "team_1_location": "home"
-            },
-            {
-                "team_2_team_id": 672,
-                "team_2_name": "Seoul",
-                "team_2_code": None,
-                "team_2_image": "https://cdn.sportmonks.com/images/soccer/teams/0/672.png",
-                "team_2_location": "away"
-            }
-        ]
-    }
-    transformed_data = validate_and_transform_data(mock_event)
-    load_master_data(transformed_data)
-    print("Match successfully seeded.")
-    """
+    transformed_data = validate_and_transform_data(event, conn)
+    logger.info("Transformed data")
+
+    load_master_data(transformed_data, conn)
+    logger.info("Data loaded successfully.")
