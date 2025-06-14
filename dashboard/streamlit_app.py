@@ -1,7 +1,10 @@
 """Dashboard run script."""
+from dotenv import load_dotenv
+
 import streamlit as st
 
 from selector import create_match_selector
+
 
 pages = [
     st.Page(
@@ -15,6 +18,9 @@ pages = [
         icon=":material/widgets:"
     )
 ]
+
+load_dotenv()
+st.set_page_config(layout="wide")
 
 page = st.navigation(pages)
 

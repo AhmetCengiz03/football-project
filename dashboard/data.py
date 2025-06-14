@@ -13,11 +13,11 @@ import streamlit as st
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
     return psycopg2.connect(
-        host=ENV("DB_HOST"),
-        dbname=ENV("DB_NAME"),
-        user=ENV("DB_USER"),
-        password=ENV("DB_PASSWORD"),
-        port=ENV("DB_PORT")
+        host=ENV["HOST"],
+        dbname=ENV["DATABASE_NAME"],
+        user=ENV["DATABASE_USERNAME"],
+        password=ENV["DATABASE_PASSWORD"],
+        port=ENV["PORT"]
     )
 
 
@@ -83,3 +83,8 @@ def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
             WHERE match_id = %s
             """
     return execute_query(query, match_id)
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    print(get_all_matches())

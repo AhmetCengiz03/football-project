@@ -3,6 +3,8 @@ import streamlit as st
 import emoji
 import plotly.graph_objects as go
 
+from data import get_all_stats_for_selected_match
+
 
 # Temporary data
 matches_data = {
@@ -25,11 +27,13 @@ matches_data = {
 }
 
 
-st.set_page_config(layout="wide")
+def get_current_match_data():
+    matches_data = get_all_stats_for_selected_match(
+        st.session_state["selected_match_id"])
+    return matches_data
 
 
 def main():
-
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
     with col1:
@@ -110,4 +114,4 @@ def main():
                     unsafe_allow_html=True)
 
 
-main()
+get_current_match_data()

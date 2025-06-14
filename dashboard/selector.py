@@ -72,8 +72,6 @@ def create_match_selector():
     with st.sidebar:
         st.header("Match Selection")
 
-        season_data = season_selection_filtering(get_all_matches())
-
         comp_data = competition_selection_filtering(
             season_selection_filtering(get_all_matches())
         )
