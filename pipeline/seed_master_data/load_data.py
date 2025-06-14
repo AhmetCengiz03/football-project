@@ -12,7 +12,6 @@ def insert_team(conn: connection, team: dict) -> None:
             ON CONFLICT (team_id) DO NOTHING;
         """, (team["team_id"], team["name"], team["short_code"], team["logo_url"]
               ))
-        cur.close()
 
 
 def insert_competition(conn: connection, competition_id: int, name: str) -> None:
@@ -24,7 +23,6 @@ def insert_competition(conn: connection, competition_id: int, name: str) -> None
             VALUES (%s)
             ON CONFLICT (competition_id) DO NOTHING;
         """, (competition_id, name))
-        cur.close()
 
 
 def insert_season(conn: connection, season_id: int, name: str) -> None:
@@ -35,7 +33,6 @@ def insert_season(conn: connection, season_id: int, name: str) -> None:
             VALUES (%s, %s)
             ON CONFLICT (season_id) DO NOTHING;
         """, (season_id, name))
-        cur.close()
 
 
 def insert_match(conn: connection, match_id: int, home_team_id: int, away_team_id: int, match_date: str) -> None:
@@ -46,7 +43,6 @@ def insert_match(conn: connection, match_id: int, home_team_id: int, away_team_i
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (match_id) DO NOTHING;
         """, (match_id, home_team_id, away_team_id, match_date))
-        cur.close()
 
 
 def insert_match_assignment(conn: connection, match_id: int, competition_id: int, season_id: int) -> None:
