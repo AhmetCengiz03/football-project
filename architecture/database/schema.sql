@@ -12,8 +12,8 @@ DROP TABLE IF EXISTS team;
 CREATE TABLE team (
     team_id SMALLINT NOT NULL,
     team_name VARCHAR(50) NOT NULL,
-    team_code VARCHAR(10) NOT NULL,
-    logo_url TEXT NOT NULL,
+    team_code VARCHAR(10),
+    logo_url TEXT,
     PRIMARY KEY (team_id)
 );
 
@@ -30,7 +30,7 @@ CREATE TABLE season (
 );
 
 CREATE TABLE match (
-    match_id INT GENERATED ALWAYS AS IDENTITY,
+    match_id INT NOT NULL,
     home_team_id SMALLINT NOT NULL,
     away_team_id SMALLINT NOT NULL,
     match_date TIMESTAMP,
@@ -57,7 +57,7 @@ CREATE TABLE event_type (
 );
 
 CREATE TABLE match_minute_stats (
-    minute_stat_id INT NOT NULL,
+    minute_stat_id INT GENERATED ALWAYS AS IDENTITY,
     match_id INT NOT NULL,
     match_minute SMALLINT,
     half SMALLINT,

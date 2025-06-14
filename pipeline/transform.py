@@ -36,6 +36,8 @@ STATS_COLUMNS = [
     "interceptions_home",
     "long_passes_away",
     "long_passes_home",
+    "offsides_away",
+    "offsides_home",
     "shots_blocked_away",
     "shots_blocked_home",
     "shots_off_target_away",
