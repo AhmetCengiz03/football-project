@@ -265,7 +265,11 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df = drop_bulk_columns(df, BULK_COLUMNS)
     df_map = get_type_mapping("types_map_api.xlsx")
     df_match_event = get_match_event_df(df)
-    df_events = prepare_events(df_match_event, EVENT_COLUMNS, df_map)
+
+    if df_match_event.empty:
+        df_events = df_match_event
+    else:
+        df_events = prepare_events(df_match_event, EVENT_COLUMNS, df_map)
 
     df_stats = append_period_to_statistics(df, get_statistics(df))
 

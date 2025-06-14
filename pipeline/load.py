@@ -69,32 +69,35 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
         return None
 
 
-def upload_all_data(minute_df: pd.DataFrame, event_df: pd.DataFrame, db_conn: connection) -> None:
+def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
+                    event_df: pd.DataFrame = None) -> None:
     """Upload transformed data to all relevant tables."""
 
     minute_stat_id = insert_dataframe(
         minute_df, "match_minute_stats", db_conn, "minute_stat_id")
 
-    if isinstance(minute_stat_id, list):
-        event_df["minute_stat_id"] = minute_stat_id[0][0]
+    if not event_df.empty:
+        if isinstance(minute_stat_id, list):
+            event_df["minute_stat_id"] = minute_stat_id[0][0]
 
-    match_event_df = event_df[["match_event_id",
-                               "minute_stat_id", "event_type_id", "team_id"]]
-    insert_dataframe(match_event_df, "match_event",
-                     db_conn, "match_event_id", "match_event_id")
+        match_event_df = event_df[["match_event_id",
+                                   "minute_stat_id", "event_type_id", "team_id"]]
+        insert_dataframe(match_event_df, "match_event",
+                         db_conn, "match_event_id", "match_event_id")
 
-    player_df = get_players_df(event_df)
-    insert_dataframe(player_df, "player", db_conn,
-                     returning="player_id", conflict="player_id")
+        player_df = get_players_df(event_df)
+        insert_dataframe(player_df, "player", db_conn,
+                         returning="player_id", conflict="player_id")
 
-    player_match_event_df = event_df[["match_event_id",
-                                      "player_id", "related_player_id"]].copy()
+        player_match_event_df = event_df[["match_event_id",
+                                          "player_id", "related_player_id"]].copy()
 
-    player_match_event_df["related_player_id"] = player_match_event_df["related_player_id"].astype(
-        float).astype('Int64')
+        player_match_event_df["related_player_id"] = player_match_event_df[
+            "related_player_id"].astype(
+            float).astype('Int64')
 
-    insert_dataframe(player_match_event_df, "player_match_event",
-                     db_conn, conflict=["match_event_id", "player_id"])
+        insert_dataframe(player_match_event_df, "player_match_event",
+                         db_conn, conflict=["match_event_id", "player_id"])
 
 
 def get_players_df(event_df: pd.DataFrame):
@@ -119,41 +122,10 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    base_df = get_dataframe_from_json("match_19348525/scrape_1.json")
-    minute_df, event_df, flags = transform_data(base_df)
+    base_df = get_dataframe_from_json("match_19348525/scrape_8.json")
+    m_df, e_df, flags = transform_data(base_df)
 
     conn = get_connection()
-    upload_all_data(minute_df, event_df, conn)
-
-    # minute_stat_id = insert_dataframe(
-    #     minute_df, "match_minute_stats", db_conn, "minute_stat_id")
-
-    # match_event_df = event_df[["match_event_id",
-    #                            "minute_stat_id", "event_type_id", "team_id"]]
-
-    # players = pd.concat([
-    #     event_df[["player_id", "player_name"]].rename(
-    #         columns={"player_id": "id",
-    #                  "player_name": "name"}),
-    #     event_df[["related_player_id", "related_player_name"]].rename(
-    #         columns={"related_player_id": "id",
-    #                  "related_player_name": "name"})
-    # ])
-
-    # player_df = players.dropna(subset=["id"]).drop_duplicates(subset=["id"])
-    # player_df = player_df.rename(
-    #     columns={"id": "player_id", "name": "player_name"})
-
-    # print(insert_dataframe(player_df, "player", db_conn,
-    #       returning="player_id", conflict="player_id"))
-
-    # player_match_event_df = event_df[["match_event_id",
-    #                                   "player_id", "related_player_id"]].copy()
-
-    # player_match_event_df["related_player_id"] = player_match_event_df["related_player_id"].astype(
-    #     float).astype('Int64')
-
-    # insert_dataframe(player_match_event_df, "player_match_event",
-    #                  db_conn, conflict=["match_event_id", "player_id"])
+    upload_all_data(m_df, conn, e_df)
 
     conn.close()
