@@ -27,9 +27,9 @@ def test_create_match_schedule_success(sample_fixture_data, config):
 
     fixture = sample_fixture_data[0]
     match = {
+        "match_id": fixture["id"],
         "start_time": fixture["starting_at"],
         "fixture_name": fixture["name"],
-        "match_id": 123
     }
     group_name = "c17-football-2025-06-13-fixtures"
 
@@ -38,7 +38,7 @@ def test_create_match_schedule_success(sample_fixture_data, config):
     assert scheduler_client.create_schedule.called
     schedule = scheduler_client.create_schedule.call_args[1]
     assert schedule["Name"].startswith(
-        "c17-football-123")
+        "c17-football-101")
     assert schedule["GroupName"] == group_name
     assert schedule["ScheduleExpression"] == 'cron(* * * * ? *)'
 
