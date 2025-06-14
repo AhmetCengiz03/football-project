@@ -160,7 +160,6 @@ def validate_and_transform_data(event: dict, conn: connection) -> dict:
 
     insert_home_team = check_team_exists(conn, home_team)
     insert_away_team = check_team_exists(conn, away_team)
-    conn.close()
 
     return {
         "match_id": int(event["match_id"]),
