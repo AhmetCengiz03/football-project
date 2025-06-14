@@ -96,7 +96,6 @@ def check_entity_in_db(conn: connection, table: str,  id_col: str, name_col: str
         query = f"SELECT {name_col} FROM {table} WHERE {id_col} = %s"
         cur.execute(query, (entity_id,))
         result = cur.fetchone()
-        cur.close()
     return result[0] if result else None
 
 
@@ -151,11 +150,8 @@ def validate_and_transform_data(event: dict, conn: connection) -> dict:
     competition_id = int(event["league_id"])
     season_id = int(event["season_id"])
 
-    competition_id = int(event["league_id"])
     competition_name, insert_competition = check_competition_exists(
         conn, competition_id)
-
-    season_id = int(event["season_id"])
     season_name, insert_season = check_season_exists(conn, season_id)
 
     insert_home_team = check_team_exists(conn, home_team)
