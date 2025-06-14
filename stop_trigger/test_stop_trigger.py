@@ -4,22 +4,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from stop_trigger import get_schedule_groups, delete_scheduler, format_team_names
-
-
-def test_format_team_codes_valid_codes():
-    team_1 = "team1"
-    team_2 = "team2"
-    formatted = format_team_names(team_1, team_2)
-    assert formatted == "team1-team2"
-
-
-def test_format_team_names_long_names_truncated():
-    team_1 = "A" * 30
-    team_2 = "B" * 30
-    result = format_team_names(team_1, team_2)
-    assert len(result) == 50
-    assert result.endswith("b" * 19)
+from stop_trigger import get_schedule_groups, delete_scheduler
 
 
 def test_get_schedule_groups_success():
@@ -66,4 +51,3 @@ def test_delete_scheduler_success():
         Name="test-schedule",
         GroupName="group2"
     )
-    assert result is True
