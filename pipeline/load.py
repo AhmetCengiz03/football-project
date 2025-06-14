@@ -99,7 +99,6 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
         insert_dataframe(player_match_event_df, "player_match_event",
                          db_conn, conflict=["match_event_id", "player_id"])
 
-
 def get_players_df(event_df: pd.DataFrame):
     """Uploads the match event data."""
 

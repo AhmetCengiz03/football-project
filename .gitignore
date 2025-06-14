@@ -102,3 +102,5 @@ __pycache__
 *.json
 match_*/
 .coverage
+
+manual_pipeline.py
