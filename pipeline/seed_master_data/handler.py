@@ -51,8 +51,8 @@ def lambda_handler(event, context):
 
 
 if __name__ == "__main__":
-    event = {'match_id': 19348525, 'league_id': 968, 'season_id': 24946, 'fixture_name': 'Yokohama vs Kawasaki Frontale', 'start_time': '2025-06-14 09:00:00', 'team_data': [{'team_1_team_id': 2503, 'team_1_name': 'Yokohama', 'team_1_code': None, 'team_1_image': 'https://cdn.sportmonks.com/images/soccer/teams/7/2503.png', 'team_1_location': 'home'}, {
-        'team_2_team_id': 3935, 'team_2_name': 'Kawasaki Frontale', 'team_2_code': 'KAW', 'team_2_image': 'https://cdn.sportmonks.com/images/soccer/teams/31/3935.png', 'team_2_location': 'away'}]}
+    event = {'match_id': 19367875, 'league_id': 1034, 'season_id': 25044, 'fixture_name': 'Gwangju vs Seoul', 'start_time': '2025-06-13 10:30:00', 'team_data': [{'team_1_team_id': 4370, 'team_1_name': 'Gwangju', 'team_1_code': None, 'team_1_image': 'https://cdn.sportmonks.com/images/soccer/teams/18/4370.png', 'team_1_location': 'home'}, {
+        'team_2_team_id': 672, 'team_2_name': 'Seoul', 'team_2_code': None, 'team_2_image': 'https://cdn.sportmonks.com/images/soccer/teams/0/672.png', 'team_2_location': 'away'}]}
     load_dotenv()
     logger = getLogger()
     logger.info("Received match info")
