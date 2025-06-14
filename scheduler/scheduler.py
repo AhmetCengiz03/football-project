@@ -1,19 +1,12 @@
 """Scheduler that runs daily to create schedules for tomorrow's matches."""
 from os import environ as ENV
 from json import loads, dumps
-import logging
+from logging import getLogger
 from http.client import HTTPSConnection
 from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from boto3 import client
-
-
-def configure_logger() -> logging.Logger:
-    """Sets up the logger."""
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    return logger
 
 
 def connect_to_scheduler_client(config: dict) -> client:
@@ -74,7 +67,7 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
 
 def manage_schedule_groups(scheduler_client: client, current_group: str, schedule_prefix: str) -> None:
     """Create current group and cleanup old ones."""
-    logger = configure_logger()
+    logger = getLogger()
     try:
         scheduler_client.create_schedule_group(Name=current_group)
         logger.info("Created schedule group: %s", current_group)
@@ -105,7 +98,7 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
 def create_match_schedule(scheduler_client: client, match: dict,
                           group_name: str, config: dict, schedule_prefix: str) -> None:
     """Create a single match schedule."""
-    logger = configure_logger()
+    logger = getLogger()
     start_time = datetime.strptime(
         match["start_time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     end_time = start_time + timedelta(hours=3)
