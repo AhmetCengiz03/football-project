@@ -1,9 +1,9 @@
 """Script to run the load phase of this pipeline."""
+from psycopg2 import Cursor
+from psycopg2.extensions import connection
 
-from extract_transform import get_db_connection
 
-
-def insert_team(cur, team: dict) -> None:
+def insert_team(cur: Cursor, team: dict) -> None:
     """Inserts a team record into the database if it doesn't 
     already exist."""
 
@@ -15,7 +15,7 @@ def insert_team(cur, team: dict) -> None:
           ))
 
 
-def insert_competition(cur, name: str) -> None:
+def insert_competition(cur: Cursor, name: str) -> None:
     """Inserts a competition record into the database if 
     it doesn't already exist."""
     cur.execute("""
@@ -25,10 +25,8 @@ def insert_competition(cur, name: str) -> None:
     """, (name,))
 
 
-def insert_season(cur, name: str) -> None:
-    """
-    Inserts a season record into the database if it does not already exist.
-    """
+def insert_season(cur: Cursor, name: str) -> None:
+    """Inserts a season record into the database if it does not already exist."""
     cur.execute("""
         INSERT INTO season (season_name)
         VALUES (%s)
@@ -36,7 +34,7 @@ def insert_season(cur, name: str) -> None:
     """, (name,))
 
 
-def insert_match(cur, match_id: int, home_team_id: int, away_team_id: int, match_date: str) -> None:
+def insert_match(cur: Cursor, match_id: int, home_team_id: int, away_team_id: int, match_date: str) -> None:
     """Inserts a match and returns its generated ID."""
     cur.execute("""
         INSERT INTO match (match_id, home_team_id, away_team_id, match_date)
@@ -45,7 +43,7 @@ def insert_match(cur, match_id: int, home_team_id: int, away_team_id: int, match
     """, (match_id, home_team_id, away_team_id, match_date))
 
 
-def insert_match_assignment(cur, match_id: int, competition_name: str, season_name: str) -> None:
+def insert_match_assignment(cur: Cursor, match_id: int, competition_name: str, season_name: str) -> None:
     """Inserts a match assignment record with the fetched 
     competition_id and season_id new match_id."""
     cur.execute("""
@@ -70,19 +68,18 @@ def insert_match_assignment(cur, match_id: int, competition_name: str, season_na
     """, (match_id, competition_id, season_id))
 
 
-def load_master_data(master_data: dict) -> None:
+def load_master_data(master_data: dict, conn: connection) -> None:
     """Loads validated match master data into the RDS PostgreSQL database.
     Inserts team, competition, season, match, and match_assignment data."""
-    conn = get_db_connection()
     cur = conn.cursor()
 
-    if master_data.get("insert_home_team"):
+    if master_data["insert_home_team"]:
         insert_team(cur, master_data["home_team"])
-    if master_data.get("insert_away_team"):
+    if master_data["insert_away_team"]:
         insert_team(cur, master_data["away_team"])
-    if master_data.get("insert_competition"):
+    if master_data["insert_competition"]:
         insert_competition(cur, master_data["competition_name"])
-    if master_data.get("insert_season"):
+    if master_data["insert_season"]:
         insert_season(cur, master_data["season_name"])
 
     insert_match(
@@ -95,8 +92,6 @@ def load_master_data(master_data: dict) -> None:
     insert_match_assignment(
         cur, master_data["match_id"], master_data["competition_name"], master_data["season_name"]
     )
-    print(f"""Inserted match {master_data["match_id"]} for {master_data['competition_name']} 
-        - {master_data['season_name']}""")
 
     conn.commit()
     cur.close()

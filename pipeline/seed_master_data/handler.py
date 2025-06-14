@@ -1,27 +1,40 @@
-import json
-import logging
-
+from logging import getLogger
 from json import dumps
+from os import environ as ENV
 
 from dotenv import load_dotenv
+from psycopg2 import connect
+from psycopg2.extensions import connection
 
 from extract_transform import validate_and_transform_data
 from load_data import load_master_data
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+
+def get_db_connection(config: dict) -> connection:
+    """Creates and returns a connection to the PostgreSQL
+    database using environment variables."""
+    return connect(
+        dbname=config["DB_NAME"],
+        user=config["DB_USER"],
+        password=config["DB_PASSWORD"],
+        host=config["DB_HOST"],
+        port=config["DB_PORT"]
+    )
 
 
 def lambda_handler(event, context):
     """Lambda entry point for processing and storing match master data."""
 
     try:
-        logger.info("Received match info: %s", dumps(event))
+        load_dotenv()
+        logger = getLogger()
+        logger.info("Received match info")
+        conn = get_db_connection(ENV)
 
-        transformed_data = validate_and_transform_data(event)
-        logger.info("Transformed data: %s", transformed_data)
+        transformed_data = validate_and_transform_data(event, conn)
+        logger.info("Transformed data")
 
-        load_master_data(transformed_data)
+        load_master_data(transformed_data, conn)
         logger.info("Data loaded successfully.")
 
         return {
