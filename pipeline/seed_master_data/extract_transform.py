@@ -27,9 +27,11 @@ def validate_team_data(team_data: list[dict]) -> tuple[dict, dict]:
     return team_data[0], team_data[1]
 
 
-def get_team_by_location(team1: dict, team2: dict, location: str) -> str:
+def get_team_by_location(team1: dict, team2: dict, location: str) -> dict:
     for team in [team1, team2]:
-        if team["team_1_location"] == location or team["team_2_location"] == location:
+        if "team_1_location" in team and team["team_1_location"] == location:
+            return team
+        if "team_2_location" in team and team["team_2_location"] == location:
             return team
     raise ValueError(f"No team found for location: {location}")
 
