@@ -115,10 +115,13 @@ CREATE TABLE player (
 CREATE TABLE player_match_event (
     player_match_event_id INT GENERATED ALWAYS AS IDENTITY,
     player_id INT NOT NULL,
+    related_player_id INT,
     match_event_id INT NOT NULL,
     PRIMARY KEY (player_match_event_id),
     FOREIGN KEY (player_id) REFERENCES player(player_id),
-    FOREIGN KEY (match_event_id) REFERENCES match_event(match_event_id)
+    FOREIGN KEY (related_player_id) REFERENCES player(player_id),
+    FOREIGN KEY (match_event_id) REFERENCES match_event(match_event_id),
+    CONSTRAINT unique_event UNIQUE (match_event_id, player_id)
 );
 
 INSERT INTO event_type (event_type_id, type_name) VALUES
