@@ -23,6 +23,7 @@ jobs:
         run: |
           pip install -r dashboard/requirements.txt
           pip install -r pipeline/requirements.txt
+          pip install -r pipeline/seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
 
       - name: Run Pytest
@@ -44,7 +45,9 @@ jobs:
         run: |
           pip install -r dashboard/requirements.txt
           pip install -r pipeline/requirements.txt
+          pip install -r pipeline/seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
+          
 
       - name: Run Pylint
         run: pylint --fail-under=8 dashboard/*.py pipeline/*.py
