@@ -30,16 +30,6 @@ def test_create_match_schedule_success(sample_fixture_data, config):
         "match_id": fixture["id"],
         "start_time": fixture["starting_at"],
         "fixture_name": fixture["name"],
-        "team_data": [
-            {
-                "team_1_code": fixture["participants"][0]["short_code"],
-                "team_1_name": fixture["participants"][0]["name"]
-            },
-            {
-                "team_2_code": fixture["participants"][1]["short_code"],
-                "team_2_name": fixture["participants"][1]["name"]
-            }
-        ]
     }
     group_name = "c17-football-2025-06-13-fixtures"
 
