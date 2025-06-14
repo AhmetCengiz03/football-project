@@ -6,35 +6,9 @@ from datetime import datetime, timedelta
 
 from scheduler import (
     get_data_from_fixtures,
-    format_team_names, create_match_schedule,
+    create_match_schedule,
     manage_schedule_groups
 )
-
-
-def test_format_team_codes_valid_codes(sample_fixture_data):
-    participants = sample_fixture_data[0]["participants"]
-    team_1 = {
-        "team_1_name": participants[0]["name"]
-    }
-    team_2 = {
-        "team_2_name": participants[1]["name"]
-    }
-
-    formatted = format_team_names(team_1, team_2)
-    assert formatted == "teama-teamb"
-
-
-def test_format_team_codes_no_team_name(sample_fixture_data):
-    participants = sample_fixture_data[0]["participants"]
-    team_1 = {
-        "team_1_name": None
-    }
-    team_2 = {
-        "team_2_name": participants[1]["name"]
-    }
-
-    formatted = format_team_names(team_1, team_2)
-    assert formatted == "unknown-teamb"
 
 
 @patch("scheduler.get_all_daily_fixtures")
@@ -53,18 +27,9 @@ def test_create_match_schedule_success(sample_fixture_data, config):
 
     fixture = sample_fixture_data[0]
     match = {
+        "match_id": fixture["id"],
         "start_time": fixture["starting_at"],
         "fixture_name": fixture["name"],
-        "team_data": [
-            {
-                "team_1_code": fixture["participants"][0]["short_code"],
-                "team_1_name": fixture["participants"][0]["name"]
-            },
-            {
-                "team_2_code": fixture["participants"][1]["short_code"],
-                "team_2_name": fixture["participants"][1]["name"]
-            }
-        ]
     }
     group_name = "c17-football-2025-06-13-fixtures"
 
@@ -73,7 +38,7 @@ def test_create_match_schedule_success(sample_fixture_data, config):
     assert scheduler_client.create_schedule.called
     schedule = scheduler_client.create_schedule.call_args[1]
     assert schedule["Name"].startswith(
-        "c17-football-teama-teamb")
+        "c17-football-101")
     assert schedule["GroupName"] == group_name
     assert schedule["ScheduleExpression"] == 'cron(* * * * ? *)'
 
