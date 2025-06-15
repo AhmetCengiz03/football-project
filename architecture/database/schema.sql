@@ -19,13 +19,13 @@ CREATE TABLE team (
 
 CREATE TABLE competition (
     competition_id INT NOT NULL,
-    competition_name VARCHAR(50) NOT NULL UNIQUE,
+    competition_name VARCHAR(50) NOT NULL,
     PRIMARY KEY (competition_id)
 );
 
 CREATE TABLE season (
     season_id INT NOT NULL,
-    season_name VARCHAR(50) NOT NULL UNIQUE,
+    season_name VARCHAR(50) NOT NULL,
     PRIMARY KEY (season_id)
 );
 
@@ -133,4 +133,3 @@ INSERT INTO event_type (event_type_id, type_name) VALUES
 (18, 'substitution'),
 (19, 'yellowcard'),
 (20, 'redcard');
-

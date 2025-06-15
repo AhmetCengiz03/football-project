@@ -2,6 +2,7 @@
 
 from os import environ as ENV
 from http.client import HTTPSConnection
+import logging
 from json import load
 from datetime import datetime, timezone
 
@@ -9,6 +10,13 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from extract import run_extract
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level="INFO",
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S"
+)
 
 STATS_COLUMNS = [
     "accurate_crosses_away",
@@ -130,12 +138,15 @@ def get_dataframe_from_json(file_path: str) -> pd.DataFrame:
 
     with open(file_path, "r", encoding="utf-8") as f:
         data = load(f)
+
+    logger.info("Read json data successfully.")
     return get_dataframe_from_response(data)
 
 
 def drop_bulk_columns(df: pd.DataFrame, columns_to_remove: list[str]) -> pd.DataFrame:
     """Drops unnecessary columns from the extracted data."""
 
+    logger.info("Dropping unnecessary columns from request.")
     return df.drop(columns=columns_to_remove, errors="ignore")
 
 
@@ -146,6 +157,7 @@ def get_statistics(df: pd.DataFrame) -> pd.DataFrame:
     df_stats = pd.json_normalize(df["statistics"].iloc[0])
     df_stats["match_id"] = match_id
 
+    logger.info("Created statistics dataframe.")
     return df_stats
 
 
@@ -154,17 +166,21 @@ def get_active_period(periods: list[dict]) -> dict:
 
     for period in periods:
         if period.get("ticking", False):
+
+            logger.info("Found active period.")
             return period
 
     for period in reversed(periods):
         if 'started' in period:
+
+            logger.info("Found last active period.")
             return period
 
     return periods[-1]
 
 
 def get_period_information(df: pd.DataFrame) -> tuple[bool, int, int]:
-    """Returns the minute and half"""
+    """Returns the the state of the half, the current half and the minute."""
 
     periods = df.at[0, "periods"]
     active_period = get_active_period(periods)
@@ -173,6 +189,8 @@ def get_period_information(df: pd.DataFrame) -> tuple[bool, int, int]:
     type_id = active_period.get("type_id", -1)
     minute = active_period.get("minutes", -1)
 
+    logger.info("Is half live: %s. Current half: %s. Current minute: %s.",
+                ticking, type_id, minute)
     return (ticking, type_id, minute)
 
 
@@ -184,6 +202,8 @@ def append_period_to_statistics(df: pd.DataFrame, df_stats: pd.DataFrame) -> pd.
     df_stats["half"] = type_id
     df_stats["match_minute"] = minute
 
+    logger.info(
+        "Successfully appended statistics with current game state information.")
     return df_stats.drop(columns=['id', 'fixture_id'], errors="ignore")
 
 
@@ -191,18 +211,21 @@ def get_match_event_df(df: pd.DataFrame) -> pd.DataFrame:
     """Returns the DataFrame for the match_event table."""
 
     events = df.at[0, "events"]
+    logger.info("Found current match events.")
     return pd.DataFrame(events)
 
 
 def drop_event_columns(df: pd.DataFrame, columns_to_remove: list[str]) -> pd.DataFrame:
     """Drops events not necessary to our design."""
 
+    logger.info("Dropping unnecessary event information.")
     return df.drop(columns=columns_to_remove, errors="ignore")
 
 
 def map_event_to_type(df_map: pd.DataFrame, df_event: pd.DataFrame) -> pd.DataFrame:
     """Return the mapping of event to event_type."""
 
+    logger.info("Mapping events to their types.")
     return df_event.merge(df_map, on="type_id", how="inner")
 
 
@@ -221,6 +244,7 @@ def prepare_events(df: pd.DataFrame, columns_to_remove: list[str],
         "type_id": "event_type_id"
     })
 
+    logger.info("match_event dataframe ready for upload.")
     return df_events
 
 
@@ -234,6 +258,7 @@ def get_type_mapping(file_path: str) -> pd.DataFrame:
     df_mapping.columns = ["type_id", "statistic_name"]
     df_mapping["statistic_name"] = df_mapping["statistic_name"].str.lower()
 
+    logger.info("Successfully created the type map dataframe.")
     return df_mapping
 
 
@@ -250,12 +275,14 @@ def create_match_minute_df(df_stats: pd.DataFrame, df_map: pd.DataFrame) -> pd.D
         values="data.value"
     ).reset_index()
 
+    logger.info("Successfully created the match_minute_stats dataframe.")
     return df_minute
 
 
 def drop_unwanted_stats(df: pd.DataFrame, columns_to_remove: list[str]) -> pd.DataFrame:
     """Drops stats not necessary to our design."""
 
+    logger.info("Dropping unwanted statistics.")
     return df.drop(columns=columns_to_remove, errors="ignore")
 
 
@@ -288,6 +315,8 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     })
 
     game_status = get_flags(df, df_stats)
+    logger.info("Is game over: %s", game_status["game_over"])
+    logger.info("Transform handing off to load ...")
     return df_minute, df_events, game_status
 
 
