@@ -28,12 +28,13 @@ def validate_team_data(team_data: list[dict]) -> tuple[dict, dict]:
 
 
 def get_team_by_location(team1: dict, team2: dict, location: str) -> dict:
+    """Gets the team's location, either home or away."""
     for team in [team1, team2]:
         if "team_1_location" in team and team["team_1_location"] == location:
             return team
         if "team_2_location" in team and team["team_2_location"] == location:
             return team
-    raise ValueError(f"No team found for location: {location}")
+    raise ValueError(f"No team found for location: {location}.")
 
 
 def extract_team_info(team: dict) -> dict:
@@ -79,12 +80,12 @@ def fetch_entity_name(entity: str, entity_id: int) -> str:
 
     if res.status != 200:
         raise ValueError(
-            f"Failed to fetch {entity} with ID {entity_id}: {res.status} {res.reason}")
+            f"Failed to fetch {entity} with ID {entity_id}: {res.status} {res.reason}.")
 
     data = loads(body)
     if "data" not in data or "name" not in data["data"]:
         raise KeyError(
-            f"Invalid response for {entity} with id: {entity_id}:{data}"
+            f"Invalid response for {entity} with id: {entity_id}:{data}."
         )
 
     return data["data"]["name"]

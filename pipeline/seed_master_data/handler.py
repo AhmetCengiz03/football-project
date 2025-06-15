@@ -33,15 +33,15 @@ def lambda_handler(event: list[dict], context):
 
         for match_event in event:
             try:
-                logger.info("Received match info")
+                logger.info("Received match info.")
 
                 transformed_data = validate_and_transform_data(
                     match_event, conn)
-                logger.info("Transformed match: %s",
+                logger.info("Transformed match: %s.",
                             match_event.get("match_id"))
 
                 load_master_data(transformed_data, conn)
-                logger.info("Successfully loaded match: %s",
+                logger.info("Successfully loaded match: %s.",
                             transformed_data["match_id"])
                 conn.close()
 
@@ -51,7 +51,7 @@ def lambda_handler(event: list[dict], context):
                 })
 
             except Exception as e:
-                logger.error("Failed to process match: %s", str(e))
+                logger.error("Failed to process match: %s.", str(e))
                 results.append({
                     "match_id": match_event["match_id"],
                     "status_code": 200,
@@ -67,7 +67,7 @@ def lambda_handler(event: list[dict], context):
         }
 
     except Exception as e:
-        logger.error("Insert master data pipeline failed: %s", str(e))
+        logger.error("Insert master data pipeline failed: %s.", str(e))
         if conn:
             conn.close()
         raise RuntimeError("Error at runtime.")
@@ -78,11 +78,11 @@ if __name__ == "__main__":
         'team_2_team_id': 672, 'team_2_name': 'Seoul', 'team_2_code': None, 'team_2_image': 'https://cdn.sportmonks.com/images/soccer/teams/0/672.png', 'team_2_location': 'away'}]}]
     load_dotenv()
     logger = getLogger()
-    logger.info("Received match info")
+    logger.info("Received match info.")
     conn = get_db_connection(ENV)
 
     transformed_data = validate_and_transform_data(event, conn)
-    logger.info("Transformed data")
+    logger.info("Transformed data.")
 
     load_master_data(transformed_data, conn)
     logger.info("Data loaded successfully.")
