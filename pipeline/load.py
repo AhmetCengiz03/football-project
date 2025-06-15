@@ -1,5 +1,6 @@
 """Loading to database."""
 from os import environ as ENV
+import logging
 
 from dotenv import load_dotenv
 import pandas as pd
@@ -8,6 +9,14 @@ from psycopg2.extras import execute_values
 from psycopg2.extensions import connection
 
 from transform import get_dataframe_from_json, transform_data
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level="INFO",
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S"
+)
 
 
 def get_connection() -> connection:
@@ -24,11 +33,12 @@ def get_connection() -> connection:
 
 def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
                      returning=None, conflict=None) -> list[tuple] | None:
-    """Insert data from a pandas Dataframe into a PostgreSQL table"""
+    """Insert data from a pandas Dataframe into a PostgreSQL table."""
 
     columns = ", ".join(df.columns)
 
     if df.isnull().any().any():
+        logger.info("DataFrame for table %s found null values.", table_name)
         values = []
         for _, row in df.iterrows():
             processed_row = []
@@ -41,6 +51,7 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
                     processed_row.append(item)
             values.append(tuple(processed_row))
     else:
+        logger.info("DataFrame for table %s found no null values.", table_name)
         values = df.to_records(index=False).tolist()
 
     insert_query = f"INSERT INTO {table_name} ({columns}) VALUES %s"
@@ -56,16 +67,19 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
     try:
         with db_conn.cursor() as cursor:
 
+            logger.info("Running execute_values ...")
             execute_values(cursor, insert_query, values)
 
             result = cursor.fetchall() if returning else None
 
             db_conn.commit()
+
+            logger.info("Upload successful.")
             return result
 
     except psycopg2.Error as e:
         db_conn.rollback()
-        print(f"Error inserting data: {e}")
+        logger.error("Error inserting data: %s", e)
         return None
 
 
@@ -73,6 +87,7 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
                     event_df: pd.DataFrame = None) -> None:
     """Upload transformed data to all relevant tables."""
 
+    logger.info("Uploading to match_minute_stats ...")
     minute_stat_id = insert_dataframe(
         minute_df, "match_minute_stats", db_conn, "minute_stat_id")
 
@@ -82,10 +97,14 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
 
         match_event_df = event_df[["match_event_id",
                                    "minute_stat_id", "event_type_id", "team_id"]]
+
+        logger.info("Uploading to match_event ...")
         insert_dataframe(match_event_df, "match_event",
                          db_conn, "match_event_id", "match_event_id")
 
         player_df = get_players_df(event_df)
+
+        logger.info("Uploading to player ...")
         insert_dataframe(player_df, "player", db_conn,
                          returning="player_id", conflict="player_id")
 
@@ -96,8 +115,10 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
             "related_player_id"].astype(
             float).astype('Int64')
 
+        logger.info("Uploading to player_match_event ...")
         insert_dataframe(player_match_event_df, "player_match_event",
                          db_conn, conflict=["match_event_id", "player_id"])
+
 
 def get_players_df(event_df: pd.DataFrame):
     """Uploads the match event data."""
@@ -113,6 +134,7 @@ def get_players_df(event_df: pd.DataFrame):
 
     player_df = players.dropna(subset=["id"]).drop_duplicates(subset=["id"])
 
+    logger.info("Successfully created players dataframe.")
     return player_df.rename(
         columns={"id": "player_id", "name": "player_name"})
 
