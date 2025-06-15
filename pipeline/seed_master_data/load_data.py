@@ -25,7 +25,7 @@ def insert_competition(conn: connection, competition_id: int, name: str) -> None
 
 
 def insert_season(conn: connection, season_id: int, name: str) -> None:
-    """Inserts a season record into the database if it does not already exist."""
+    """Inserts a season record into the database if it doesn't already exist."""
     with conn.cursor() as cur:
         cur.execute("""
             INSERT INTO season (season_id, season_name)
