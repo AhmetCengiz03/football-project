@@ -65,7 +65,7 @@ if __name__ == "__main__":
     api_conn = HTTPSConnection("api.sportmonks.com")
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
-    identify_match = 19370423
+    identify_match = 19393185
     run_scraper(identify_match, api_token, api_conn)
 
     api_conn.close()

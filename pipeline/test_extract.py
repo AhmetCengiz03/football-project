@@ -1,5 +1,5 @@
 # pylint: skip-file
-"""Tests for the test_extract.py script."""
+"""Tests for the extract.py script."""
 
 from pytest import raises
 from unittest.mock import MagicMock
