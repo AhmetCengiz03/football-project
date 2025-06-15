@@ -100,7 +100,6 @@ __pycache__
 *.tfvars
 
 *.json
-*.txt
 match_*/
 .coverage
 
