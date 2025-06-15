@@ -26,6 +26,7 @@ def lambda_handler(event: list[dict], context):
     """Lambda entry point for processing and storing match master data."""
     load_dotenv()
     logger = getLogger()
+    conn = None
     try:
         conn = get_db_connection(ENV)
         results = []
@@ -42,7 +43,6 @@ def lambda_handler(event: list[dict], context):
                 load_master_data(transformed_data, conn)
                 logger.info("Successfully loaded match: %s.",
                             transformed_data["match_id"])
-                conn.close()
 
                 results.append({
                     "match_id": transformed_data["match_id"],
@@ -57,6 +57,7 @@ def lambda_handler(event: list[dict], context):
                     "error": str(e)
                 })
 
+        conn.close()
         return {
             "status_code": 200,
             "body": dumps({
@@ -70,8 +71,6 @@ def lambda_handler(event: list[dict], context):
         if conn:
             conn.close()
         raise RuntimeError("Error at runtime.")
-    finally:
-        conn = None
 
 
 if __name__ == "__main__":
