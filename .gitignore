@@ -103,3 +103,5 @@ __pycache__
 *.txt
 match_*/
 .coverage
+
+manual_pipeline.py
