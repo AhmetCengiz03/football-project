@@ -24,29 +24,52 @@ def get_db_connection(config: dict) -> connection:
 
 def lambda_handler(event, context):
     """Lambda entry point for processing and storing match master data."""
-
+    load_dotenv()
+    logger = getLogger()
+    conn = None
     try:
-        load_dotenv()
-        logger = getLogger()
-        logger.info("Received match info")
         conn = get_db_connection(ENV)
+        results = []
 
-        transformed_data = validate_and_transform_data(event, conn)
-        logger.info("Transformed data")
+        for match_event in event:
+            try:
+                logger.info("Received match info")
 
-        load_master_data(transformed_data, conn)
-        logger.info("Data loaded successfully.")
-        conn.close()
+                transformed_data = validate_and_transform_data(
+                    match_event, conn)
+                logger.info("Transformed match: %s",
+                            match_event.get("match_id"))
+
+                load_master_data(transformed_data, conn)
+                logger.info("Successfully loaded match: %s",
+                            transformed_data["match_id"])
+                conn.close()
+
+                results.append({
+                    "match_id": transformed_data["match_id"],
+                    "status_code": 200
+                })
+
+            except Exception as e:
+                logger.error("Failed to process match: %s", str(e))
+                results.append({
+                    "match_id": match_event["match_id"],
+                    "status_code": 200,
+                    "error": str(e)
+                })
+
         return {
-            "statusCode": 200,
+            "status_code": 200,
             "body": dumps({
-                "message": "Initial match data processed and inserted successfully.",
-                "match_id": transformed_data["match_id"]
+                "message": "Scheduled matches seeded.",
+                "results": results
             })
         }
 
     except Exception as e:
         logger.error("Insert master data pipeline failed: %s", str(e))
+        if conn:
+            conn.close()
         raise RuntimeError("Error at runtime.")
 
 
