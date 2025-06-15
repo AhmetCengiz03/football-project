@@ -3,7 +3,8 @@ import streamlit as st
 import emoji
 import plotly.graph_objects as go
 
-from data import get_all_stats_for_selected_match
+from data import get_all_stats_for_selected_match, get_match_info_for_selected_match
+from data_processing import calculate_score_from_events, create_match_minute_slider
 
 
 # Temporary data
@@ -27,21 +28,47 @@ matches_data = {
 }
 
 
-def get_current_match_data():
-    matches_data = get_all_stats_for_selected_match(
-        st.session_state["selected_match_id"])
-    return matches_data
+def create_top_bar():
+    goals_by_minute = calculate_score_from_events()
+    match_info = get_match_info_for_selected_match()
+    col1, col2, col3 = st.columns([1.5, 4, 1.5])
+
+    with col2:
+        col2a, col2b, col2c = st.columns(3)
+        with col2a:
+            st.markdown(f"<h1 style='text-align: left'>{st.session_state["home_team"]
+                                                        } {match_info["home_logo"]}</h1>",
+                        unsafe_allow_html=True)
+
+        with col2b:
+            st.markdown(f"<h1 style='text-align: center'>{goals_by_minute["home_score"]
+                                                          } - {match_info["away_score"]}</h1>",
+                        unsafe_allow_html=True)
+
+        with col2c:
+            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]
+                                                         } {st.session_state["away_team"]} </h1>",
+                        unsafe_allow_html=True)
+
+    with col3:
+        col2a, col2b, col2c = st.columns(3)
+        with col2b:
+            if st.button("PLAY/PAUSE GAME"):
+                st.write("Game toggled!")
 
 
 def main():
+    print("Entering")
+    create_match_minute_slider()
+    print("left")
+
+
+def random():
+    match_data = get_current_match_data()
+
+    create_top_bar()
+
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
-
-    with col1:
-        with st.container():
-
-            # Temporary examples
-            selected_match = st.selectbox(
-                "", list(matches_data.keys()), label_visibility="collapsed")
 
     with col2:
         match_info = matches_data[selected_match]
@@ -114,4 +141,4 @@ def main():
                     unsafe_allow_html=True)
 
 
-get_current_match_data()
+main()
