@@ -22,7 +22,7 @@ def get_db_connection(config: dict) -> connection:
     )
 
 
-def lambda_handler(event, context):
+def lambda_handler(event: list[dict], context):
     """Lambda entry point for processing and storing match master data."""
     load_dotenv()
     logger = getLogger()
