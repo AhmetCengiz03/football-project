@@ -119,6 +119,20 @@ def test_get_active_period_gets_correct_period_second_half():
     assert period["period_id"] == 2
 
 
+def test_get_active_period_gets_correct_period_third_half():
+
+    periods = [
+        {"period_id": 1, "started": 150, "ticking": False},
+        {"period_id": 2, "started": 300, "ticking": False},
+        {"period_id": 3, "started": 400, "ticking": True},
+    ]
+
+    period = get_active_period(periods)
+
+    assert period["ticking"]
+    assert period["period_id"] == 3
+
+
 def test_get_active_period_gets_correct_period_game_over_last_ended():
 
     periods = [
@@ -128,7 +142,7 @@ def test_get_active_period_gets_correct_period_game_over_last_ended():
 
     period = get_active_period(periods)
 
-    assert period["ticking"] == False
+    assert not period["ticking"]
     assert period["period_id"] == 2
 
 
@@ -213,7 +227,7 @@ def test_get_flags_first_half():
     flags = get_flags(df, df_stats)
 
     assert flags["half_live"]
-    assert flags["game_over"] == False
+    assert not flags["game_over"]
 
 
 def test_get_flags_half_time():
@@ -223,8 +237,8 @@ def test_get_flags_half_time():
 
     flags = get_flags(df, df_stats)
 
-    assert flags["half_live"] == False
-    assert flags["game_over"] == False
+    assert not flags["half_live"]
+    assert not flags["game_over"]
 
 
 def test_get_flags_full_time():
@@ -234,5 +248,5 @@ def test_get_flags_full_time():
 
     flags = get_flags(df, df_stats)
 
-    assert flags["half_live"] == False
+    assert not flags["half_live"]
     assert flags["game_over"]
