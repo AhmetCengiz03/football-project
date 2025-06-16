@@ -39,7 +39,7 @@ def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     return home_team, away_team
 
 
-def find_and_select_match(comp_data, home_team, away_team):
+def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str], away_team: list[str]) -> None:
     """Find the match and handle selection."""
     matches = comp_data[
         (comp_data["home_team"] == home_team) &
@@ -54,7 +54,7 @@ def find_and_select_match(comp_data, home_team, away_team):
 
     if len(matches) == 1:
         selected_match = matches.iloc[0]
-        st.session_state["selected_match_id"] = selected_match["match_id"]
+        st.session_state["selected_match_id"] = int(selected_match["match_id"])
         st.success("Match found")
     else:
         dates = matches["match_date"].astype(str).tolist()
@@ -63,16 +63,17 @@ def find_and_select_match(comp_data, home_team, away_team):
         selected_date = st.selectbox("Select date:", dates, key="match_date")
         if selected_date:
             selected_index = dates.index(selected_date)
-            st.session_state["selected_match_id"] = match_ids[selected_index]
+            st.session_state["selected_match_id"] = int(
+                match_ids[selected_index])
+            st.session_state["home_team"] = home_team
+            st.session_state["away_team"] = away_team
             st.success("Match found")
 
 
-def create_match_selector():
+def create_match_selector() -> None:
     """Create the match selector dropdown."""
     with st.sidebar:
         st.header("Match Selection")
-
-        season_data = season_selection_filtering(get_all_matches())
 
         comp_data = competition_selection_filtering(
             season_selection_filtering(get_all_matches())

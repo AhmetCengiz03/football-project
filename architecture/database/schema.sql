@@ -57,7 +57,7 @@ CREATE TABLE event_type (
 );
 
 CREATE TABLE match_minute_stats (
-    minute_stat_id INT GENERATED ALWAYS AS IDENTITY,
+    match_minute_stats_id INT GENERATED ALWAYS AS IDENTITY,
     match_id INT NOT NULL,
     match_minute SMALLINT,
     half SMALLINT,
@@ -90,18 +90,40 @@ CREATE TABLE match_minute_stats (
     key_passes_away SMALLINT,
     saves_home SMALLINT,
     saves_away SMALLINT,
-    PRIMARY KEY (minute_stat_id),
+    big_chances_created_home SMALLINT,
+    big_chances_created_away SMALLINT,
+    big_chances_missed_home SMALLINT,
+    big_chances_missed_away SMALLINT,
+    successful_dribbles_home SMALLINT,
+    successful_dribbles_away SMALLINT,
+    dribbled_attempts_home SMALLINT,
+    dribbled_attempts_away SMALLINT,
+    duels_won_home SMALLINT,
+    duels_won_away SMALLINT,
+    free_kicks_home SMALLINT,
+    free_kicks_away SMALLINT,
+    interceptions_home SMALLINT,
+    interceptions_away SMALLINT,
+    offsides_home SMALLINT,
+    offsides_away SMALLINT,
+    shots_blocked_home SMALLINT, 
+    shots_blocked_away SMALLINT, 
+    successful_headers_home SMALLINT,
+    successful_headers_away SMALLINT,
+    total_crosses_home SMALLINT,
+    total_crosses_away SMALLINT,
+    PRIMARY KEY (match_minute_stats_id),
     FOREIGN KEY (match_id) REFERENCES match(match_id),
-    CONSTRAINT valid_half_value CHECK (half IN (1,2))
+    CONSTRAINT valid_half_value CHECK (half IN (1,2,3,4,5))
 );
 
 CREATE TABLE match_event (
     match_event_id INT NOT NULL,
-    minute_stat_id INT NOT NULL,
+    match_minute_stats_id INT NOT NULL,
     event_type_id SMALLINT,
     team_id INT,
     PRIMARY KEY (match_event_id),
-    FOREIGN KEY (minute_stat_id) REFERENCES match_minute_stats(minute_stat_id),
+    FOREIGN KEY (match_minute_stats_id) REFERENCES match_minute_stats(match_minute_stats_id) ON DELETE CASCADE,
     FOREIGN KEY (event_type_id) REFERENCES event_type(event_type_id),
     FOREIGN KEY (team_id) REFERENCES team(team_id)
 );
@@ -120,7 +142,7 @@ CREATE TABLE player_match_event (
     PRIMARY KEY (player_match_event_id),
     FOREIGN KEY (player_id) REFERENCES player(player_id),
     FOREIGN KEY (related_player_id) REFERENCES player(player_id),
-    FOREIGN KEY (match_event_id) REFERENCES match_event(match_event_id),
+    FOREIGN KEY (match_event_id) REFERENCES match_event(match_event_id) ON DELETE CASCADE,
     CONSTRAINT unique_event UNIQUE (match_event_id, player_id)
 );
 

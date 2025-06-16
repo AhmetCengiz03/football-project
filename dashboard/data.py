@@ -1,7 +1,6 @@
 """Script to get all necessary data for dashboard."""
 from os import environ as ENV
 
-from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
@@ -13,25 +12,27 @@ import streamlit as st
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
     return psycopg2.connect(
-        host=ENV("DB_HOST"),
-        dbname=ENV("DB_NAME"),
-        user=ENV("DB_USER"),
-        password=ENV("DB_PASSWORD"),
-        port=ENV("DB_PORT")
+        host=ENV["HOST"],
+        dbname=ENV["DATABASE_NAME"],
+        user=ENV["DATABASE_USERNAME"],
+        password=ENV["DATABASE_PASSWORD"],
+        port=ENV["PORT"]
     )
 
 
 def execute_query(query: str, params=None) -> pd.DataFrame:
     """Execute query and handle the connection/cursor."""
-    conn = get_connection()
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        cursor.execute(query, params or [])
-        records = cursor.fetchall()
-        all_matches = pd.DataFrame(records)
+    if params and not isinstance(params, (list, tuple)):
+        params = [params]
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(query, params or [])
+            records = cursor.fetchall()
+            all_matches = pd.DataFrame(records)
     return all_matches
 
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_all_matches() -> pd.DataFrame:
     """Get all matches for the dropdown."""
     query = """
@@ -50,20 +51,21 @@ def get_all_matches() -> pd.DataFrame:
     return execute_query(query)
 
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all event data for the selected match."""
     query = """
-                SELECT me.*, et.type_name
-                FROM match_event me
-                JOIN event_type et
-                ON me.event_type_id = et.event_type_id
-                WHERE me.match_id = %s
+                SELECT me.*, et.type_name, mms.match_minute
+                FROM match_minute_stats mms
+                LEFT JOIN match_event me ON me.minute_stat_id = mms.minute_stat_id
+                JOIN match m ON mms.match_id = m.match_id
+                JOIN event_type et ON me.event_type_id = et.event_type_id
+                WHERE m.match_id = %s
                  """
     return execute_query(query, match_id)
 
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_all_stats_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all the stats data for the selected match."""
     query = """
@@ -74,12 +76,22 @@ def get_all_stats_for_selected_match(match_id: int) -> pd.DataFrame:
     return execute_query(query, match_id)
 
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all the match info for the selected match."""
     query = """
-            SELECT * 
-            FROM match
+            SELECT m.match_date, 
+            ht.team_code as home_team_code,
+            ht.logo_url as home_logo_url,
+            ht.team_id as home_team_id,
+            ht.team_name as home_team_name,
+            at.team_code as away_team_code, 
+            at.logo_url as away_logo_url,
+            at.team_id as away_team_id,
+            at.team_name as away_team_name
+            FROM match as m
+            JOIN team ht ON m.home_team_id = ht.team_id
+            JOIN team at ON m.away_team_id = at.team_id
             WHERE match_id = %s
             """
     return execute_query(query, match_id)

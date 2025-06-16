@@ -84,19 +84,21 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
 
 
 def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
-                    event_df: pd.DataFrame = None) -> None:
+                    event_df: pd.DataFrame = None) -> list[dict]:
     """Upload transformed data to all relevant tables."""
 
     logger.info("Uploading to match_minute_stats ...")
-    minute_stat_id = insert_dataframe(
-        minute_df, "match_minute_stats", db_conn, "minute_stat_id")
+    match_minute_stats_id = insert_dataframe(
+        minute_df, "match_minute_stats", db_conn, "match_minute_stats_id")
 
     if not event_df.empty:
-        if isinstance(minute_stat_id, list):
-            event_df["minute_stat_id"] = minute_stat_id[0][0]
+        if isinstance(match_minute_stats_id, list):
+            event_df["match_minute_stats_id"] = match_minute_stats_id[0][0]
 
         match_event_df = event_df[["match_event_id",
-                                   "minute_stat_id", "event_type_id", "team_id"]]
+                                   "match_minute_stats_id", "event_type_id", "team_id"]]
+
+        goal_check = get_if_goal_scored_this_run(event_df, db_conn)
 
         logger.info("Uploading to match_event ...")
         insert_dataframe(match_event_df, "match_event",
@@ -119,6 +121,9 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
         insert_dataframe(player_match_event_df, "player_match_event",
                          db_conn, conflict=["match_event_id", "player_id"])
 
+        return goal_check
+    return []
+
 
 def get_players_df(event_df: pd.DataFrame):
     """Uploads the match event data."""
@@ -139,11 +144,43 @@ def get_players_df(event_df: pd.DataFrame):
         columns={"id": "player_id", "name": "player_name"})
 
 
+def get_if_goal_scored_this_run(event_df: pd.DataFrame, db_conn: connection) -> list[dict]:
+    """Returns information on if a goal was recorded for this minute."""
+
+    goals_df = event_df[event_df["type_name"].str.lower() == "goal"]
+    goal_event_ids = set(goals_df["match_event_id"])
+
+    if not goal_event_ids:
+        return []
+
+    with db_conn.cursor() as curs:
+        curs.execute(
+            """
+            SELECT m.match_event_id FROM match_event as m
+            JOIN event_type as e USING (event_type_id)
+            WHERE e.type_name = 'goal'
+            """)
+        known_goal_ids = set(row[0] for row in curs.fetchall())
+
+    new_goals = goal_event_ids - known_goal_ids
+
+    if not new_goals:
+        return []
+
+    new_goals_df = goals_df[goals_df["match_event_id"].isin(new_goals)]
+
+    new_goals_info = new_goals_df[[
+        "match_event_id", "match_id", "team_id", "player_name", "minute", "type_name"
+    ]].to_dict(orient="records")
+
+    return new_goals_info
+
+
 if __name__ == "__main__":
 
     load_dotenv()
 
-    base_df = get_dataframe_from_json("match_19348525/scrape_8.json")
+    base_df = get_dataframe_from_json("match_19348530/scrape_101.json")
     m_df, e_df, flags = transform_data(base_df)
 
     conn = get_connection()

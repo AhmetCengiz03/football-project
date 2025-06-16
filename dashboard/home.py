@@ -1,62 +1,41 @@
 """Home page."""
 import streamlit as st
-import emoji
 import plotly.graph_objects as go
+import pandas as pd
+
+from data import get_match_info_for_selected_match
+from timeline import create_timeline_df, create_slider
 
 
-# Temporary data
-matches_data = {
-    "Arsenal vs Chelsea": {
-        "home_team": "Arsenal",
-        "away_team": "Chelsea",
-        "home_score": 2,
-        "away_score": 1,
-        "home_logo": emoji.emojize(":red_circle:"),
-        "away_logo": emoji.emojize(":blue_circle:")
-    },
-    "Arsenal vs Liverpool": {
-        "home_team": "Arsenal",
-        "away_team": "Liverpool",
-        "home_score": 3,
-        "away_score": 2,
-        "home_logo": emoji.emojize(":red_circle:"),
-        "away_logo": emoji.emojize(":red_circle:")
-    }
-}
+def create_top_bar(timeline_df: pd.DataFrame, selected_minute: int) -> None:
+    """Create the top bar of the page."""
+    match_info = get_match_info_for_selected_match(
+        st.session_state["selected_match_id"])
 
+    _, col2, col3 = st.columns([1.5, 4, 1.5])
 
-st.set_page_config(layout="wide")
-
-
-def main():
-
-    col1, col2, col3 = st.columns([1.5, 4, 1.5])
-
-    with col1:
-        with st.container():
-
-            # Temporary examples
-            selected_match = st.selectbox(
-                "", list(matches_data.keys()), label_visibility="collapsed")
+    minute_data = timeline_df[timeline_df["match_minute"] == selected_minute]
+    home_score = int(minute_data["home_score"].iloc[0])
+    away_score = int(minute_data["away_score"].iloc[0])
+    home_logo = match_info["home_logo_url"].iloc[0]
+    away_logo = match_info["away_logo_url"].iloc[0]
 
     with col2:
-        match_info = matches_data[selected_match]
-
         col2a, col2b, col2c = st.columns(3)
-
         with col2a:
-            st.markdown(f"<h1 style='text-align: left'>{match_info["home_team"]
-                                                        } {match_info["home_logo"]}</h1>",
+            st.image(home_logo, width=100)
+            st.markdown(f"<h1 style='text-align: center'>{st.session_state["home_team"]
+                                                          }</h1>",
                         unsafe_allow_html=True)
 
         with col2b:
-            st.markdown(f"<h1 style='text-align: center'>{match_info["home_score"]
-                                                          } - {match_info["away_score"]}</h1>",
+            st.markdown(f"<h1 style='text-align: center'>{home_score
+                                                          } - {away_score}</h1>",
                         unsafe_allow_html=True)
 
         with col2c:
-            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]
-                                                         } {match_info["away_team"]} </h1>",
+            st.image(away_logo, width=100)
+            st.markdown(f"<h1 style='text-align: center'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
     with col3:
@@ -65,13 +44,55 @@ def main():
             if st.button("PLAY/PAUSE GAME"):
                 st.write("Game toggled!")
 
-    with st.container():
-        st.slider("Minute", min_value=0, max_value=90, step=1)
 
-        num = st.columns(91)
+def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
+    """Create radar plot for match statistics."""
+    data_up_to_minute = timeline_df[timeline_df["match_minute"]
+                                    == selected_minute]
 
-        num[44].write(emoji.emojize(":football:"))
-        num[90].write(emoji.emojize(":blue_circle:"))
+    # I may calculate averages here? For now it is just the stats for this minute for proof of concept
+    latest_data = data_up_to_minute.iloc[-1]
+
+    categories = [
+        "possession_home",
+        "shots_home",
+        "corners_home",
+        "tackles_home"
+    ]
+
+    values = [
+        latest_data.get("possession_home", 0),
+        latest_data.get("shots_home", 0),
+        latest_data.get("corners_home", 0),
+        latest_data.get("tackles_home", 0)
+    ]
+    fig = go.Figure(data=go.Scatterpolar(
+        r=values,
+        theta=categories,
+        fill='toself'
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True
+            ),
+        ),
+        showlegend=False
+    )
+
+    return fig
+
+
+def create_home_page() -> None:
+    """Main function to create the home page."""
+    timeline_df = create_timeline_df()
+
+    selected_minute = create_slider(timeline_df)
+
+    create_top_bar(timeline_df, selected_minute)
+
+    col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
     # Game momentum/pressure chart
 
@@ -84,23 +105,7 @@ def main():
 
     # Radar chart
     with col2:
-        st.markdown("<h3 style='text-align: center'>Radar Chart</h3>",
-                    unsafe_allow_html=True)
-        fig = go.Figure(data=go.Scatterpolar(
-            r=[1, 5, 2, 2, 3],
-            theta=['processing cost', 'mechanical properties', 'chemical stability', 'thermal stability',
-                   'device integration'],
-            fill='toself'
-        ))
-
-        fig.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True
-                ),
-            ),
-            showlegend=False
-        )
+        fig = create_match_progression_radar(timeline_df, selected_minute)
 
         st.plotly_chart(fig)
 
@@ -109,5 +114,5 @@ def main():
         st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
                     unsafe_allow_html=True)
 
-
-main()
+if __name__ == "__main__":
+    create_home_page()
