@@ -90,9 +90,32 @@ CREATE TABLE match_minute_stats (
     key_passes_away SMALLINT,
     saves_home SMALLINT,
     saves_away SMALLINT,
+    big_chances_created_home SMALLINT,
+    big_chances_created_away SMALLINT,
+    big_chances_missed_home SMALLINT,
+    big_chances_missed_away SMALLINT,
+    successful_dribbles_home, SMALLINT,
+    successful_dribbles_away, SMALLINT,
+    dribbled_attempts_home SMALLINT,
+    dribbled_attempts_away SMALLINT,
+    duels_won_home SMALLINT,
+    duels_won_away SMALLINT,
+    free_kicks_home SMALLINT,
+    free_kicks_away SMALLINT,
+    interceptions_home SMALLINT,
+    interceptions_away SMALLINT,
+    offsides_home SMALLINT,
+    offsides_away SMALLINT,
+    shots_blocked_home SMALLINT, 
+    shots_blocked_away SMALLINT, 
+    successful_headers_home SMALLINT,
+    successful_headers_away SMALLINT,
+    total_crosses_home SMALLINT,
+    total_crosses_away SMALLINT,
+
     PRIMARY KEY (minute_stat_id),
     FOREIGN KEY (match_id) REFERENCES match(match_id),
-    CONSTRAINT valid_half_value CHECK (half IN (1,2))
+    CONSTRAINT valid_half_value CHECK (half IN (1,2,3,4,5))
 );
 
 CREATE TABLE match_event (
