@@ -273,9 +273,10 @@ resource "aws_lambda_function" "pipeline_lambda" {
             DB_HOST=var.DATABASE_HOST
             DB_PORT=var.DATABASE_PORT
             DB_USER=var.DATABASE_USERNAME
-            DB_PASSWORD=var.DATABASE_PASSWORD
+            DB_PASS=var.DATABASE_PASSWORD
             DB_NAME=var.DATABASE_NAME
             TOKEN=var.API_KEY
+            BASE_URL=var.BASE_URL
         }
     }
 }

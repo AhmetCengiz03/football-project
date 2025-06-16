@@ -42,3 +42,7 @@ variable DATABASE_PORT {
 variable API_KEY {
     type = string
 }
+
+variable BASE_URL {
+    type = string
+}
