@@ -3,8 +3,6 @@ FROM public.ecr.aws/lambda/python:latest
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY extract_transform.py .
-COPY load_data.py .
-COPY handler.py .
+COPY stop_trigger.py .
 
-CMD ["handler.lambda_handler"]
+CMD ["stop_trigger.lambda_handler"]
