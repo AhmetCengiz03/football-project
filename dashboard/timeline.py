@@ -14,7 +14,6 @@ def calculate_score_from_events(events_df: pd.DataFrame, match_info: pd.DataFram
     goal_events = events_df[events_df["type_name"] == "goal"]
 
     if goal_events.empty:
-        print("No goals in this match")
         return pd.DataFrame()
 
     goal_events["is_home_goal"] = (

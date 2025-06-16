@@ -5,24 +5,27 @@ import streamlit as st
 from selector import create_match_selector
 
 
-pages = [
-    st.Page(
-        "home.py",
-        title="home",
-        icon=":material/home:"
-    ),
-    st.Page(
-        "page2.py",
-        title="page2",
-        icon=":material/widgets:"
-    )
-]
+def main():
+    load_dotenv()
+    st.set_page_config(layout="wide")
+    create_match_selector()
 
-load_dotenv()
-st.set_page_config(layout="wide")
+    pages = [
+        st.Page(
+            "home.py",
+            title="home",
+            icon=":material/home:"
+        ),
+        st.Page(
+            "page2.py",
+            title="page2",
+            icon=":material/widgets:"
+        )
+    ]
 
-page = st.navigation(pages)
+    page = st.navigation(pages)
+    page.run()
 
-create_match_selector()
 
-page.run()
+if __name__ == "__main__":
+    main()

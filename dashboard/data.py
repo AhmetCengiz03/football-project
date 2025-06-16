@@ -23,7 +23,7 @@ def get_connection() -> connection:
 
 def execute_query(query: str, params=None) -> pd.DataFrame:
     """Execute query and handle the connection/cursor."""
-    if params is not None and not isinstance(params, (list, tuple)):
+    if params and not isinstance(params, (list, tuple)):
         params = [params]
     with get_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -33,7 +33,7 @@ def execute_query(query: str, params=None) -> pd.DataFrame:
     return all_matches
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=3600)
 def get_all_matches() -> pd.DataFrame:
     """Get all matches for the dropdown."""
     query = """
@@ -52,7 +52,7 @@ def get_all_matches() -> pd.DataFrame:
     return execute_query(query)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=3600)
 def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all event data for the selected match."""
     query = """
@@ -66,7 +66,7 @@ def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     return execute_query(query, match_id)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=3600)
 def get_all_stats_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all the stats data for the selected match."""
     query = """
@@ -77,7 +77,7 @@ def get_all_stats_for_selected_match(match_id: int) -> pd.DataFrame:
     return execute_query(query, match_id)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=3600)
 def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all the match info for the selected match."""
     query = """

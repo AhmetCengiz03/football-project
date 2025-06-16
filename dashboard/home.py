@@ -114,5 +114,5 @@ def create_home_page() -> None:
         st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
                     unsafe_allow_html=True)
 
-
-create_home_page()
+if __name__ == "__main__":
+    create_home_page()
