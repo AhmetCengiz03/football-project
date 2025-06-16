@@ -39,7 +39,7 @@ def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     return home_team, away_team
 
 
-def find_and_select_match(comp_data, home_team, away_team):
+def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str], away_team: list[str]) -> None:
     """Find the match and handle selection."""
     matches = comp_data[
         (comp_data["home_team"] == home_team) &
@@ -70,7 +70,7 @@ def find_and_select_match(comp_data, home_team, away_team):
             st.success("Match found")
 
 
-def create_match_selector():
+def create_match_selector() -> None:
     """Create the match selector dropdown."""
     with st.sidebar:
         st.header("Match Selection")

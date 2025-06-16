@@ -23,13 +23,13 @@ def get_connection() -> connection:
 
 def execute_query(query: str, params=None) -> pd.DataFrame:
     """Execute query and handle the connection/cursor."""
-    conn = get_connection()
     if params is not None and not isinstance(params, (list, tuple)):
         params = [params]
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        cursor.execute(query, params or [])
-        records = cursor.fetchall()
-        all_matches = pd.DataFrame(records)
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(query, params or [])
+            records = cursor.fetchall()
+            all_matches = pd.DataFrame(records)
     return all_matches
 
 

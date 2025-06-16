@@ -8,7 +8,7 @@ from data import (
 )
 
 
-def calculate_score_from_events(events_df, match_info):
+def calculate_score_from_events(events_df: pd.DataFrame, match_info: pd.DataFrame) -> pd.DataFrame:
     """Calculate running score for this match."""
 
     goal_events = events_df[events_df["type_name"] == "goal"]
@@ -33,7 +33,7 @@ def calculate_score_from_events(events_df, match_info):
     return goals_by_minute
 
 
-def check_all_expected_events_exist(event_pivot):
+def check_all_expected_events_exist(event_pivot: pd.DataFrame) -> None:
     """Ensure that all expected events are in table."""
     expected_events = ["var", "goal", "owngoal", "penalty",
                        "missed_penalty", "substitution", "yellowcard", "redcard"]
@@ -42,7 +42,7 @@ def check_all_expected_events_exist(event_pivot):
             event_pivot[event_type] = 0
 
 
-def create_full_match_timeline(events_df, match_info, match_stats):
+def create_full_match_timeline(events_df: pd.DataFrame, match_info: pd.DataFrame, match_stats: pd.DataFrame) -> pd.DataFrame:
     """Create a full timeline with all stats at every minute."""
 
     timeline = match_stats.copy()
@@ -77,7 +77,7 @@ def create_full_match_timeline(events_df, match_info, match_stats):
     return timeline
 
 
-def create_slider(timeline_df):
+def create_slider(timeline_df: pd.DataFrame) -> st.slider:
     """Create streamlit slider on dashboard."""
     max_minute = int(timeline_df["match_minute"].max())
     st.subheader("Match Timeline")
@@ -91,7 +91,7 @@ def create_slider(timeline_df):
     return selected_minute
 
 
-def create_timeline_df():
+def create_timeline_df() -> pd.DataFrame:
     """Create game timeline dataframe."""
     print("Creating slider")
     events_df = get_event_data_for_selected_match(

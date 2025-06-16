@@ -1,12 +1,13 @@
 """Home page."""
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
 
 from data import get_match_info_for_selected_match
 from timeline import create_timeline_df, create_slider
 
 
-def create_top_bar(timeline_df, selected_minute):
+def create_top_bar(timeline_df: pd.DataFrame, selected_minute: int) -> None:
     """Create the top bar of the page."""
     match_info = get_match_info_for_selected_match(
         st.session_state["selected_match_id"])
@@ -44,7 +45,7 @@ def create_top_bar(timeline_df, selected_minute):
                 st.write("Game toggled!")
 
 
-def create_match_progression_radar(timeline_df, selected_minute):
+def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
     """Create radar plot for match statistics."""
     data_up_to_minute = timeline_df[timeline_df["match_minute"]
                                     == selected_minute]
@@ -83,7 +84,7 @@ def create_match_progression_radar(timeline_df, selected_minute):
     return fig
 
 
-def create_home_page():
+def create_home_page() -> None:
     """Main function to create the home page."""
     timeline_df = create_timeline_df()
 
