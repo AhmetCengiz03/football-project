@@ -35,7 +35,7 @@ def lambda_handler(event=None, context=None):
 
     if df["periods"].map(bool).any():
         minute_df, event_df, flags = transform_data(df)
-        upload_all_data(minute_df, db_conn, event_df)
+        new_goals = upload_all_data(minute_df, db_conn, event_df)
 
         logger.info("ETL pipeline run successful.")
         db_conn.close()
@@ -48,6 +48,7 @@ def lambda_handler(event=None, context=None):
             "match_id": match_id
         }
 
+    flags["goal_check"] = new_goals
     return {
         "status_code": 200,
         "body": flags,
