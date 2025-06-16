@@ -31,7 +31,7 @@ def lambda_handler(event: list[dict], context):
         conn = get_db_connection(ENV)
         results = []
 
-        for match_event in event:
+        for match_event in event["matches"]:
             try:
                 logger.info("Received match info.")
 
