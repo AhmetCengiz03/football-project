@@ -58,7 +58,7 @@ def lambda_handler(event, context):
         load_dotenv()
         logger = getLogger()
         logger.info("Received event: %s", dumps(event))
-        match_end = event.get("match_end")
+        match_end = event["body"].get("game_over")
         match_id = event.get("match_id")
 
         if not all([match_id, match_end]):
