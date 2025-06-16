@@ -1,7 +1,5 @@
 FROM public.ecr.aws/lambda/python:latest
 
-WORKDIR /var/task
-
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
