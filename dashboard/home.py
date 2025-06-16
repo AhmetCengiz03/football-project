@@ -4,7 +4,7 @@ import emoji
 import plotly.graph_objects as go
 
 from data import get_all_stats_for_selected_match, get_match_info_for_selected_match
-from data_processing import calculate_score_from_events, create_match_minute_slider
+from data_processing import calculate_score_from_events, create_timeline_df, create_slider
 
 
 # Temporary data
@@ -28,26 +28,40 @@ matches_data = {
 }
 
 
-def create_top_bar():
-    goals_by_minute = calculate_score_from_events()
-    match_info = get_match_info_for_selected_match()
+def create_top_bar(timeline_df, selected_minute):
+    match_info = get_match_info_for_selected_match(
+        st.session_state["selected_match_id"])
+
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
+
+    minute_data = timeline_df[timeline_df["match_minute"] == selected_minute]
+
+    home_score = int(minute_data["home_score"].iloc[0])
+
+    away_score = int(minute_data["away_score"].iloc[0])
+
+    home_logo = match_info["home_logo_url"].iloc[0]
+
+    away_logo = match_info["away_logo_url"].iloc[0]
 
     with col2:
         col2a, col2b, col2c = st.columns(3)
         with col2a:
+            st.image(home_logo)
+
             st.markdown(f"<h1 style='text-align: left'>{st.session_state["home_team"]
-                                                        } {match_info["home_logo"]}</h1>",
+                                                        }</h1>",
                         unsafe_allow_html=True)
 
         with col2b:
-            st.markdown(f"<h1 style='text-align: center'>{goals_by_minute["home_score"]
-                                                          } - {match_info["away_score"]}</h1>",
+            st.markdown(f"<h1 style='text-align: center'>{home_score
+                                                          } - {away_score}</h1>",
                         unsafe_allow_html=True)
 
         with col2c:
-            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]
-                                                         } {st.session_state["away_team"]} </h1>",
+            st.image(away_logo)
+
+            st.markdown(f"<h1 style='text-align: right'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
     with col3:
@@ -58,51 +72,14 @@ def create_top_bar():
 
 
 def main():
-    print("Entering")
-    create_match_minute_slider()
-    print("left")
 
+    timeline_df = create_timeline_df()
 
-def random():
-    match_data = get_current_match_data()
+    selected_minute = create_slider(timeline_df)
 
-    create_top_bar()
+    create_top_bar(timeline_df, selected_minute)
 
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
-
-    with col2:
-        match_info = matches_data[selected_match]
-
-        col2a, col2b, col2c = st.columns(3)
-
-        with col2a:
-            st.markdown(f"<h1 style='text-align: left'>{match_info["home_team"]
-                                                        } {match_info["home_logo"]}</h1>",
-                        unsafe_allow_html=True)
-
-        with col2b:
-            st.markdown(f"<h1 style='text-align: center'>{match_info["home_score"]
-                                                          } - {match_info["away_score"]}</h1>",
-                        unsafe_allow_html=True)
-
-        with col2c:
-            st.markdown(f"<h1 style='text-align: right'>{match_info["away_logo"]
-                                                         } {match_info["away_team"]} </h1>",
-                        unsafe_allow_html=True)
-
-    with col3:
-        col2a, col2b, col2c = st.columns(3)
-        with col2b:
-            if st.button("PLAY/PAUSE GAME"):
-                st.write("Game toggled!")
-
-    with st.container():
-        st.slider("Minute", min_value=0, max_value=90, step=1)
-
-        num = st.columns(91)
-
-        num[44].write(emoji.emojize(":football:"))
-        num[90].write(emoji.emojize(":blue_circle:"))
 
     # Game momentum/pressure chart
 

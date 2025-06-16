@@ -26,8 +26,6 @@ def calculate_score_from_events(events_df, match_info):
     goals_by_minute["home_score"] = goals_by_minute["is_home_goal"].cumsum()
     goals_by_minute["away_score"] = goals_by_minute["is_away_goal"].cumsum()
 
-    st.dataframe(goals_by_minute)
-
     return goals_by_minute
 
 
@@ -41,7 +39,6 @@ def check_all_expected_events_exist(event_pivot):
 
 def create_full_match_timeline(events_df, match_info, match_stats):
     """Create a full timeline with all stats at every minute."""
-    st.dataframe(events_df)
 
     max_minute = match_stats["match_minute"].max()
 
@@ -65,7 +62,7 @@ def create_full_match_timeline(events_df, match_info, match_stats):
     score_data = calculate_score_from_events(events_df, match_info)
 
     if not score_data.empty:
-        timeline = timeline.merge([score_data], on="match_minute", how="left")
+        timeline = timeline.merge(score_data, on="match_minute", how="left")
 
         timeline["home_score"] = timeline["home_score"].ffill().fillna(0)
         timeline["away_score"] = timeline["away_score"].ffill().fillna(0)
@@ -90,7 +87,7 @@ def create_slider(timeline_df):
     return selected_minute
 
 
-def create_match_minute_slider():
+def create_timeline_df():
     """Create an interactive slider with timeline data."""
     print("Creating slider")
     events_df = get_event_data_for_selected_match(
@@ -103,6 +100,4 @@ def create_match_minute_slider():
     timeline_df = create_full_match_timeline(
         events_df, match_info, match_stats)
 
-    selected_minute = create_slider(timeline_df)
-
-    return selected_minute
+    return timeline_df
