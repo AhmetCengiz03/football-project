@@ -40,8 +40,6 @@ def check_all_expected_events_exist(event_pivot):
 def create_full_match_timeline(events_df, match_info, match_stats):
     """Create a full timeline with all stats at every minute."""
 
-    max_minute = match_stats["match_minute"].max()
-
     timeline = match_stats.copy()
 
     event_counts = events_df.groupby(

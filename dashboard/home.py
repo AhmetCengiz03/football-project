@@ -1,31 +1,9 @@
 """Home page."""
 import streamlit as st
-import emoji
 import plotly.graph_objects as go
 
 from data import get_all_stats_for_selected_match, get_match_info_for_selected_match
 from data_processing import calculate_score_from_events, create_timeline_df, create_slider
-
-
-# Temporary data
-matches_data = {
-    "Arsenal vs Chelsea": {
-        "home_team": "Arsenal",
-        "away_team": "Chelsea",
-        "home_score": 2,
-        "away_score": 1,
-        "home_logo": emoji.emojize(":red_circle:"),
-        "away_logo": emoji.emojize(":blue_circle:")
-    },
-    "Arsenal vs Liverpool": {
-        "home_team": "Arsenal",
-        "away_team": "Liverpool",
-        "home_score": 3,
-        "away_score": 2,
-        "home_logo": emoji.emojize(":red_circle:"),
-        "away_logo": emoji.emojize(":red_circle:")
-    }
-}
 
 
 def create_top_bar(timeline_df, selected_minute):
@@ -47,10 +25,10 @@ def create_top_bar(timeline_df, selected_minute):
     with col2:
         col2a, col2b, col2c = st.columns(3)
         with col2a:
-            st.image(home_logo)
+            st.image(home_logo, width=100)
 
-            st.markdown(f"<h1 style='text-align: left'>{st.session_state["home_team"]
-                                                        }</h1>",
+            st.markdown(f"<h1 style='text-align: center'>{st.session_state["home_team"]
+                                                          }</h1>",
                         unsafe_allow_html=True)
 
         with col2b:
@@ -59,9 +37,9 @@ def create_top_bar(timeline_df, selected_minute):
                         unsafe_allow_html=True)
 
         with col2c:
-            st.image(away_logo)
+            st.image(away_logo, width=100)
 
-            st.markdown(f"<h1 style='text-align: right'> {st.session_state["away_team"]} </h1>",
+            st.markdown(f"<h1 style='text-align: center'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
     with col3:
@@ -69,6 +47,44 @@ def create_top_bar(timeline_df, selected_minute):
         with col2b:
             if st.button("PLAY/PAUSE GAME"):
                 st.write("Game toggled!")
+
+
+def create_match_progression_radar(timeline_df, selected_minute):
+    data_up_to_minute = timeline_df[timeline_df["match_minute"]
+                                    == selected_minute]
+
+    # I may calculate averages here? For now is just the stats for this minute for proof of concept
+    latest_data = data_up_to_minute.iloc[-1]
+
+    categories = [
+        "possession_home",
+        "shots_home",
+        "corners_home",
+        "tackles_home"
+    ]
+
+    values = [
+        latest_data.get("possession_home", 0),
+        latest_data.get("shots_home", 0),
+        latest_data.get("corners_home", 0),
+        latest_data.get("tackles_home", 0)
+    ]
+    fig = go.Figure(data=go.Scatterpolar(
+        r=values,
+        theta=categories,
+        fill='toself'
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True
+            ),
+        ),
+        showlegend=False
+    )
+
+    return fig
 
 
 def main():
@@ -92,23 +108,7 @@ def main():
 
     # Radar chart
     with col2:
-        st.markdown("<h3 style='text-align: center'>Radar Chart</h3>",
-                    unsafe_allow_html=True)
-        fig = go.Figure(data=go.Scatterpolar(
-            r=[1, 5, 2, 2, 3],
-            theta=['processing cost', 'mechanical properties', 'chemical stability', 'thermal stability',
-                   'device integration'],
-            fill='toself'
-        ))
-
-        fig.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True
-                ),
-            ),
-            showlegend=False
-        )
+        fig = create_match_progression_radar(timeline_df, selected_minute)
 
         st.plotly_chart(fig)
 
