@@ -47,8 +47,8 @@ def create_full_match_timeline(events_df, match_info, match_stats):
 
     timeline = match_stats.copy()
 
-    event_counts = events_df.groupby(
-        ["match_minute", "type_name"]).size().reset_index(name="count")
+    event_counts = events_df.value_counts(
+        ["match_minute", "type_name"]).reset_index(name="count")
 
     event_pivot = event_counts.pivot_table(
         index="match_minute",
