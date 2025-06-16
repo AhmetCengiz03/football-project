@@ -38,3 +38,7 @@ variable DATABASE_HOST {
 variable DATABASE_PORT {
     type = string
 }
+
+variable API_KEY {
+    type = string
+}

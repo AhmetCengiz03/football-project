@@ -9,34 +9,34 @@ data "aws_vpc" "current-vpc" {
 }
 
 # RDS
-# resource "aws_security_group" "db-security-group" {
-#     name = "c17-football-db-sg"
-#     vpc_id = var.CURRENT_VPC_ID
-# }
+resource "aws_security_group" "db-security-group" {
+    name = "c17-football-db-sg"
+    vpc_id = var.CURRENT_VPC_ID
+}
 
-# resource "aws_vpc_security_group_ingress_rule" "db-sg-inbound-rule" {
-#     security_group_id = aws_security_group.db-security-group.id
-#     cidr_ipv4 = "0.0.0.0/0"
-#     from_port = 5432
-#     to_port = 5432
-#     ip_protocol = "tcp"
-# }
+resource "aws_vpc_security_group_ingress_rule" "db-sg-inbound-rule" {
+    security_group_id = aws_security_group.db-security-group.id
+    cidr_ipv4 = "0.0.0.0/0"
+    from_port = 5432
+    to_port = 5432
+    ip_protocol = "tcp"
+}
 
-# resource "aws_db_instance" "football-db" {
-#     allocated_storage = 10
-#     db_name = var.DATABASE_NAME
-#     engine = "postgres"
-#     identifier = "c17-football-db"
-#     engine_version = "17.4"
-#     instance_class = "db.t3.micro"
-#     publicly_accessible = true
-#     performance_insights_enabled = false
-#     skip_final_snapshot = true
-#     db_subnet_group_name = var.PUBLIC_SUBNET_GROUP_NAME
-#     vpc_security_group_ids = [aws_security_group.db-security-group.id]
-#     username = var.DATABASE_USERNAME
-#     password = var.DATABASE_PASSWORD
-# }
+resource "aws_db_instance" "football-db" {
+    allocated_storage = 10
+    db_name = var.DATABASE_NAME
+    engine = "postgres"
+    identifier = "c17-football-db"
+    engine_version = "17.4"
+    instance_class = "db.t3.micro"
+    publicly_accessible = true
+    performance_insights_enabled = false
+    skip_final_snapshot = true
+    db_subnet_group_name = var.PUBLIC_SUBNET_GROUP_NAME
+    vpc_security_group_ids = [aws_security_group.db-security-group.id]
+    username = var.DATABASE_USERNAME
+    password = var.DATABASE_PASSWORD
+}
 
 # S3 BUCKET
 resource "aws_s3_bucket" "s3_bucket" {
@@ -182,23 +182,6 @@ resource "aws_iam_role_policy_attachment" "lambda_role_attach" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
-resource "aws_lambda_function" "scheduler_lambda" {
-    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-    timeout = 120
-    memory_size = 512
-
-    function_name = "c17-football-scheduler-lambda"
-    role          = aws_iam_role.lambda_role.arn
-
-    package_type = "Image"
-    image_uri = data.aws_ecr_image.scheduler_image.image_uri
-
-    environment {
-        variables = {}
-    }
-}
-
-
 resource "aws_lambda_function" "match_seeder_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
     timeout = 120
@@ -217,10 +200,31 @@ resource "aws_lambda_function" "match_seeder_lambda" {
             DB_USER=var.DATABASE_USERNAME
             DB_PASSWORD=var.DATABASE_PASSWORD
             DB_NAME=var.DATABASE_NAME
-            TOPIC_REGION=var.AWS_REGION
+            SPORTMONKS_API_TOKEN=var.API_KEY
         }
     }
 }
+
+resource "aws_lambda_function" "scheduler_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
+
+    function_name = "c17-football-scheduler-lambda"
+    role          = aws_iam_role.lambda_role.arn
+
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.scheduler_image.image_uri
+
+    environment {
+        variables = {
+          API_KEY=var.API_KEY
+          TARGET_ARN=aws_lambda_function.match_seeder_lambda.arn
+          ROLE_ARN=aws_iam_role.lambda_role.arn
+        }         
+    }
+}
+
 
 resource "aws_lambda_function" "pipeline_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
@@ -240,6 +244,7 @@ resource "aws_lambda_function" "pipeline_lambda" {
             DB_USER=var.DATABASE_USERNAME
             DB_PASSWORD=var.DATABASE_PASSWORD
             DB_NAME=var.DATABASE_NAME
+            TOKEN=var.API_KEY
         }
     }
 }
@@ -304,19 +309,6 @@ resource "aws_lambda_function" "scheduler_stopper_lambda" {
 
     package_type = "Image"
     image_uri = data.aws_ecr_image.scheduler_stopper_image.image_uri
-
-    environment {
-        variables = {
-            DB_HOST=var.DATABASE_HOST
-            DB_PORT=var.DATABASE_PORT
-            DB_USER=var.DATABASE_USERNAME
-            DB_PASSWORD=var.DATABASE_PASSWORD
-            DB_NAME=var.DATABASE_NAME
-            TOPIC_REGION=var.AWS_REGION
-            S3_BUCKET=aws_s3_bucket.s3_bucket.bucket
-
-        }
-    }
 }
 
 
