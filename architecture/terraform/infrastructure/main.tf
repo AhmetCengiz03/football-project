@@ -214,7 +214,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_attach" {
 
 resource "aws_lambda_function" "match_seeder_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-    timeout = 120
+    timeout = 900
     memory_size = 512
 
     function_name = "c17-football-match-seeder-lambda"
@@ -373,10 +373,10 @@ resource "aws_iam_role_policy" "eventbridge_invoke_policy" {
     "Statement" : [
         {
             "Sid"       : "AllowEventBridgeToInvokeLambda",
-            "Action"    : ["lambda:InvokeFunction"],
+            "Action"    : ["states:StartExecution"],
             "Effect"    : "Allow",
             "Resource"  : [
-              aws_lambda_function.scheduler_lambda.arn
+              "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
             ]
         }
     ] 
@@ -394,7 +394,7 @@ resource "aws_scheduler_schedule" "daily_schedule" {
   schedule_expression =  "cron(50 23 * * ? *)"
 
   target {
-    arn      = aws_lambda_function.scheduler_lambda.arn
+    arn      = "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
     role_arn = aws_iam_role.scheduler_role.arn
   }
 }
