@@ -1,7 +1,6 @@
 """Script to get all necessary data for dashboard."""
 from os import environ as ENV
 
-from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection
@@ -96,7 +95,3 @@ def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
             WHERE match_id = %s
             """
     return execute_query(query, match_id)
-
-
-if __name__ == "__main__":
-    load_dotenv()

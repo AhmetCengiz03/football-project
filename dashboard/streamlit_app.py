@@ -5,7 +5,7 @@ import streamlit as st
 from selector import create_match_selector
 
 
-def main():
+def main() -> None:
     load_dotenv()
     st.set_page_config(layout="wide")
     create_match_selector()
