@@ -1,11 +1,19 @@
 """Extracting from the Sportsmonks API."""
 
 from datetime import datetime, timezone
+import logging
 from http.client import HTTPSConnection
 from json import loads
 from os import environ as ENV
 
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level="INFO",
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S"
+)
 
 
 def scrape_live_match(url: str, conn: HTTPSConnection) -> dict:
@@ -21,7 +29,12 @@ def scrape_live_match(url: str, conn: HTTPSConnection) -> dict:
     data_str = data.decode("utf-8")
 
     if res.status == 200:
+
+        logger.info("Got successful response from API: %s", res.status)
         return loads(data_str)
+
+    logger.info(
+        "API Request unsuccessful. Status code: %s. Reason: %s.", res.status, res.reason)
     return {"error": True,
             "status": res.status,
             "reason": res.reason}
@@ -31,13 +44,14 @@ def build_scrape_url(match_identifier: str | int, token: str) -> str:
     """Returns the url required based on the given identifier."""
 
     if isinstance(match_identifier, str):
-        url = f"livescores/inplay?api_token={token}&include=statistics;periods;comments&filters=participantSearch:{match_identifier}"
+        url = f"livescores/inplay?api_token={token}&include=statistics;periods;events&filters=participantSearch:{match_identifier}"
     elif isinstance(match_identifier, int):
-        url = f"fixtures/{match_identifier}?api_token={token}"
+        url = f"fixtures/{match_identifier}?api_token={token}&include=statistics;periods;events"
     else:
         raise TypeError(
             f"{match_identifier} is not a valid string or integer.")
 
+    logger.info("Built url: %s.", url)
     return url
 
 
@@ -52,17 +66,18 @@ def prepare_data(data: dict) -> dict:
     for dict_key in ("subscription", "timezone"):
         data.pop(dict_key, None)
 
-    if "rate_limit" in data:
-        data["rate_limit"]["timestamp"] = datetime.now(
+    if "data" in data:
+        data["data"]["request_timestamp"] = datetime.now(
             timezone.utc).timestamp()
     else:
-        raise KeyError("rate_limit not in data.")
+        raise KeyError("data key not in received data.")
 
+    logger.info("Request data successfully stripped of unwanted keys.")
     return data
 
 
 def run_extract(match_identifier: str | int,
-                token: str, conn: HTTPSConnection) -> None:
+                token: str, conn: HTTPSConnection) -> dict:
     """Returns the extracted data from the data source."""
 
     now = datetime.now(timezone.utc).timestamp()
@@ -74,8 +89,9 @@ def run_extract(match_identifier: str | int,
     if "error" not in data:
         data = prepare_data(data)
     else:
-        data["timestamp"] = now
+        data["request_timestamp"] = now
 
+    logger.info("Data passed off successfully.")
     return data
 
 

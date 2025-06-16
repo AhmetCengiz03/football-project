@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS player_match_event;
+DROP TABLE IF EXISTS player;
 DROP TABLE IF EXISTS match_event;
 DROP TABLE IF EXISTS match_minute_stats;
 DROP TABLE IF EXISTS event_type;
@@ -8,26 +10,27 @@ DROP TABLE IF EXISTS competition;
 DROP TABLE IF EXISTS team;
 
 CREATE TABLE team (
-    team_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    team_id INT NOT NULL,
     team_name VARCHAR(50) NOT NULL,
-    logo_url TEXT NOT NULL,
+    team_code VARCHAR(10),
+    logo_url TEXT,
     PRIMARY KEY (team_id)
 );
 
 CREATE TABLE competition (
-    competition_id SMALLINT GENERATED ALWAYS AS IDENTITY,
-    competition_name VARCHAR(50) NOT NULL UNIQUE,
+    competition_id INT NOT NULL,
+    competition_name VARCHAR(50) NOT NULL,
     PRIMARY KEY (competition_id)
 );
 
 CREATE TABLE season (
-    season_id SMALLINT NOT NULL,
-    season_name VARCHAR(50) NOT NULL UNIQUE,
+    season_id INT NOT NULL,
+    season_name VARCHAR(50) NOT NULL,
     PRIMARY KEY (season_id)
 );
 
 CREATE TABLE match (
-    match_id INT GENERATED ALWAYS AS IDENTITY,
+    match_id INT NOT NULL,
     home_team_id INT NOT NULL,
     away_team_id INT NOT NULL,
     match_date TIMESTAMP,
@@ -44,13 +47,12 @@ CREATE TABLE match_assignment (
     PRIMARY KEY (match_assignment_id),
     FOREIGN KEY (match_id) REFERENCES match(match_id),
     FOREIGN KEY (competition_id) REFERENCES competition(competition_id),
-    FOREIGN KEY (season_id) REFERENCES season(season_id)  
+    FOREIGN KEY (season_id) REFERENCES season(season_id)
 );
 
 CREATE TABLE event_type (
-    event_type_id SMALLINT NOT NULL UNIQUE,
+    event_type_id SMALLINT NOT NULL,
     type_name VARCHAR(50),
-    type_description VARCHAR(100),
     PRIMARY KEY (event_type_id)
 );
 
@@ -88,32 +90,46 @@ CREATE TABLE match_minute_stats (
     key_passes_away SMALLINT,
     saves_home SMALLINT,
     saves_away SMALLINT,
-    offsides_home SMALLINT,
-    offsides_away SMALLINT,
     PRIMARY KEY (minute_stat_id),
     FOREIGN KEY (match_id) REFERENCES match(match_id),
     CONSTRAINT valid_half_value CHECK (half IN (1,2))
 );
 
 CREATE TABLE match_event (
-    match_event_id INT GENERATED ALWAYS AS IDENTITY,
+    match_event_id INT NOT NULL,
     minute_stat_id INT NOT NULL,
-    event_type_id INT,
-    event_description TEXT,
+    event_type_id SMALLINT,
+    team_id INT,
     PRIMARY KEY (match_event_id),
     FOREIGN KEY (minute_stat_id) REFERENCES match_minute_stats(minute_stat_id),
-    FOREIGN KEY (event_type_id) REFERENCES event_type(event_type_id)
+    FOREIGN KEY (event_type_id) REFERENCES event_type(event_type_id),
+    FOREIGN KEY (team_id) REFERENCES team(team_id)
 );
 
+CREATE TABLE player (
+    player_id INT NOT NULL,
+    player_name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (player_id)
+);
 
-INSERT INTO event_type (event_type_id, type_name, type_description) 
-VALUES (1, 'home_goal', 'Goal scored by home team'),
-    (2, 'away_goal', 'Goal scored by away team'),
-    (3, 'home_yellow', 'Yellow card for home team player'),
-    (4, 'away_yellow', 'Yellow card for away team player'),
-    (5, 'home_red', 'Red card for home team player'),
-    (6, 'away_red', 'Red card for away team player'),
-    (7, 'home_sub', 'Substitution for home team player'),
-    (8, 'away_sub', 'Substitution for away team player'),
-    (9, 'home_penalty_goal', 'Penalty goal by home team player'),
-    (10, 'away_penalty_goal', 'Penalty goal by away team player');
+CREATE TABLE player_match_event (
+    player_match_event_id INT GENERATED ALWAYS AS IDENTITY,
+    player_id INT NOT NULL,
+    related_player_id INT,
+    match_event_id INT NOT NULL,
+    PRIMARY KEY (player_match_event_id),
+    FOREIGN KEY (player_id) REFERENCES player(player_id),
+    FOREIGN KEY (related_player_id) REFERENCES player(player_id),
+    FOREIGN KEY (match_event_id) REFERENCES match_event(match_event_id),
+    CONSTRAINT unique_event UNIQUE (match_event_id, player_id)
+);
+
+INSERT INTO event_type (event_type_id, type_name) VALUES
+(10, 'var'),
+(14, 'goal'),
+(15, 'owngoal'),
+(16, 'penalty'),
+(17, 'missed_penalty'),
+(18, 'substitution'),
+(19, 'yellowcard'),
+(20, 'redcard');

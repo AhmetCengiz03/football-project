@@ -1,6 +1,8 @@
 """Dashboard run script."""
 import streamlit as st
 
+from selector import create_match_selector
+
 pages = [
     st.Page(
         "home.py",
@@ -15,14 +17,7 @@ pages = [
 ]
 
 page = st.navigation(pages)
-page.run()
 
-with st.sidebar.container(height=310):
-    if page.title == "page2":
-        st.text_input("test")
-    else:
-        st.page_link("home.py", label="Home", icon=":material/home:")
-        st.write("Welcome to the home page!")
-        st.write(
-            "Select a page from above."
-        )
+create_match_selector()
+
+page.run()

@@ -1,0 +1,1 @@
+- Lambda function to delete a running schedule

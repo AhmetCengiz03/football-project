@@ -83,6 +83,7 @@ venv/
 .venv
 
 **/.env
+.env
 
 **/.venv
 venv/
@@ -92,7 +93,6 @@ __pycache__
 .pytest_cache
 
 *.csv
-.csv
 
 .terraform*
 *.tfstate
@@ -100,7 +100,4 @@ __pycache__
 *.tfvars
 
 *.json
-match_*/
-.coverage
 
-manual_pipeline.py
