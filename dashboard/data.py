@@ -100,4 +100,3 @@ def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
 
 if __name__ == "__main__":
     load_dotenv()
-    print(get_all_matches())
