@@ -2,6 +2,7 @@
 from os import environ as ENV
 from json import loads, dumps
 from logging import getLogger
+import logging
 from http.client import HTTPSConnection
 from datetime import datetime, timedelta, timezone
 
@@ -12,7 +13,8 @@ from boto3 import client
 def connect_to_scheduler_client(config: dict) -> client:
     """Connects to the Eventbridge scheduler."""
     return client("scheduler", aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
+                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"],
+                  aws_session_token=config["AWS_SESSION_TOKEN"])
 
 
 def get_all_daily_fixtures(conn: HTTPSConnection, config: dict) -> dict:
@@ -132,9 +134,7 @@ def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
                      timedelta(days=1)).strftime('%Y-%m-%d')
     group_name = f"{schedule_prefix}-{tomorrow_date}-fixtures"
 
-    scheduler_client = client("scheduler",
-                              aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-                              aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
+    scheduler_client = connect_to_scheduler_client(config)
 
     api_conn = HTTPSConnection("api.sportmonks.com")
     fixtures = get_data_from_fixtures(api_conn, config)
