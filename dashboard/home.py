@@ -2,31 +2,27 @@
 import streamlit as st
 import plotly.graph_objects as go
 
-from data import get_all_stats_for_selected_match, get_match_info_for_selected_match
-from data_processing import calculate_score_from_events, create_timeline_df, create_slider
+from data import get_match_info_for_selected_match
+from timeline import create_timeline_df, create_slider
 
 
 def create_top_bar(timeline_df, selected_minute):
+    """Create the top bar of the page."""
     match_info = get_match_info_for_selected_match(
         st.session_state["selected_match_id"])
 
-    col1, col2, col3 = st.columns([1.5, 4, 1.5])
+    _, col2, col3 = st.columns([1.5, 4, 1.5])
 
     minute_data = timeline_df[timeline_df["match_minute"] == selected_minute]
-
     home_score = int(minute_data["home_score"].iloc[0])
-
     away_score = int(minute_data["away_score"].iloc[0])
-
     home_logo = match_info["home_logo_url"].iloc[0]
-
     away_logo = match_info["away_logo_url"].iloc[0]
 
     with col2:
         col2a, col2b, col2c = st.columns(3)
         with col2a:
             st.image(home_logo, width=100)
-
             st.markdown(f"<h1 style='text-align: center'>{st.session_state["home_team"]
                                                           }</h1>",
                         unsafe_allow_html=True)
@@ -38,7 +34,6 @@ def create_top_bar(timeline_df, selected_minute):
 
         with col2c:
             st.image(away_logo, width=100)
-
             st.markdown(f"<h1 style='text-align: center'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
@@ -50,10 +45,11 @@ def create_top_bar(timeline_df, selected_minute):
 
 
 def create_match_progression_radar(timeline_df, selected_minute):
+    """Create radar plot for match statistics."""
     data_up_to_minute = timeline_df[timeline_df["match_minute"]
                                     == selected_minute]
 
-    # I may calculate averages here? For now is just the stats for this minute for proof of concept
+    # I may calculate averages here? For now it is just the stats for this minute for proof of concept
     latest_data = data_up_to_minute.iloc[-1]
 
     categories = [
@@ -87,8 +83,8 @@ def create_match_progression_radar(timeline_df, selected_minute):
     return fig
 
 
-def main():
-
+def create_home_page():
+    """Main function to create the home page."""
     timeline_df = create_timeline_df()
 
     selected_minute = create_slider(timeline_df)
@@ -118,4 +114,4 @@ def main():
                     unsafe_allow_html=True)
 
 
-main()
+create_home_page()

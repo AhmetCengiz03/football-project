@@ -1,6 +1,5 @@
 """Dashboard run script."""
 from dotenv import load_dotenv
-
 import streamlit as st
 
 from selector import create_match_selector

@@ -1,7 +1,11 @@
+"""All processing of data for the dashboard."""
 import pandas as pd
 import streamlit as st
 
-from data import get_event_data_for_selected_match, get_match_info_for_selected_match, get_all_stats_for_selected_match
+from data import (
+    get_event_data_for_selected_match,
+    get_match_info_for_selected_match, get_all_stats_for_selected_match
+)
 
 
 def calculate_score_from_events(events_df, match_info):
@@ -30,6 +34,7 @@ def calculate_score_from_events(events_df, match_info):
 
 
 def check_all_expected_events_exist(event_pivot):
+    """Ensure that all expected events are in table."""
     expected_events = ["var", "goal", "owngoal", "penalty",
                        "missed_penalty", "substitution", "yellowcard", "redcard"]
     for event_type in expected_events:
@@ -73,6 +78,7 @@ def create_full_match_timeline(events_df, match_info, match_stats):
 
 
 def create_slider(timeline_df):
+    """Create streamlit slider on dashboard."""
     max_minute = int(timeline_df["match_minute"].max())
     st.subheader("Match Timeline")
     selected_minute = st.slider(
@@ -86,7 +92,7 @@ def create_slider(timeline_df):
 
 
 def create_timeline_df():
-    """Create an interactive slider with timeline data."""
+    """Create game timeline dataframe."""
     print("Creating slider")
     events_df = get_event_data_for_selected_match(
         st.session_state["selected_match_id"])
