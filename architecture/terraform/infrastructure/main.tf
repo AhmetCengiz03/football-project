@@ -177,7 +177,10 @@ resource "aws_iam_policy" "lambda_policy" {
   })
 }
 
-
+resource "aws_iam_role_policy_attachment" "lambda_role_attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy.arn
+}
 
 resource "aws_lambda_function" "scheduler_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
@@ -265,10 +268,6 @@ resource "aws_lambda_function" "pipeline_lambda" {
 #     }
 # }
 
-resource "aws_iam_role_policy_attachment" "lambda_role_attach" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_policy.arn
-}
 
 # resource "aws_lambda_function" "report_lambda" {
 #     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
