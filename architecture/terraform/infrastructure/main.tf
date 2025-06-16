@@ -112,6 +112,13 @@ resource "aws_iam_role" "lambda_role" {
                     "Service": "lambda.amazonaws.com"
                 },
                 "Action": "sts:AssumeRole"
+            },
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "scheduler.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
             }
         ]
     })
@@ -172,7 +179,30 @@ resource "aws_iam_policy" "lambda_policy" {
           "rds:DescribeDBClusters"
         ],
         "Resource": "*"
-        }
+        },
+        {
+        Sid    = "EventBridgeSchedulerAccess",
+        Effect = "Allow",
+        Action = [
+          "scheduler:CreateSchedule",
+          "scheduler:CreateScheduleGroup",
+          "scheduler:GetSchedule",
+          "scheduler:ListSchedules",
+          "scheduler:ListScheduleGroups",
+          "scheduler:UpdateSchedule",
+          "scheduler:DeleteSchedule",
+          "scheduler:DeleteScheduleGroup"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid = "PassRole",
+        Effect = "Allow",
+        Action =[
+          "iam:PassRole"
+        ]
+        Resource = "*"
+      }
     ]
   })
 }
@@ -221,6 +251,7 @@ resource "aws_lambda_function" "scheduler_lambda" {
           API_KEY=var.API_KEY
           TARGET_ARN=aws_lambda_function.match_seeder_lambda.arn
           ROLE_ARN=aws_iam_role.lambda_role.arn
+          AWS_REGION_NAME=var.AWS_REGION
         }         
     }
 }
@@ -309,6 +340,11 @@ resource "aws_lambda_function" "scheduler_stopper_lambda" {
 
     package_type = "Image"
     image_uri = data.aws_ecr_image.scheduler_stopper_image.image_uri
+    environment {
+        variables = {
+            AWS_REGION_NAME=var.AWS_REGION
+        }
+    }
 }
 
 
