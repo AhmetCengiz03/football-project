@@ -372,7 +372,7 @@ resource "aws_iam_role_policy" "eventbridge_invoke_policy" {
             "Action"    : ["states:StartExecution"],
             "Effect"    : "Allow",
             "Resource"  : [
-              "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
+              var.SCHEDULE_ARN
             ]
         }
     ] 
@@ -390,7 +390,7 @@ resource "aws_scheduler_schedule" "daily_schedule" {
   schedule_expression =  "cron(50 22 * * ? *)"
 
   target {
-    arn      = "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
+    arn      = var.SCHEDULE_ARN
     role_arn = aws_iam_role.scheduler_role.arn
   }
 }

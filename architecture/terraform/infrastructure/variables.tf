@@ -54,3 +54,7 @@ variable PIPELINE_ARN {
 variable PIPELINE_ROLE_ARN {
     type = string
 }
+
+variable SCHEDULE_ARN {
+    type = string
+}
