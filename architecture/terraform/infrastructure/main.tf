@@ -61,10 +61,10 @@ resource "aws_sns_topic" "report-topic" {
   }
 }
 
-resource "aws_sns_topic_subscription" "sms_subscription" {
+resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.report-topic.arn
-  protocol    = "sms"
-  endpoint    = "+447983279191"
+  protocol    = "EMAIL"
+  endpoint    = "trainee.raf.hall@sigmalabs.co.uk"
 }
 
 
