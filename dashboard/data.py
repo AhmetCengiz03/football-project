@@ -57,7 +57,7 @@ def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     query = """
                 SELECT me.*, et.type_name, mms.match_minute
                 FROM match_minute_stats mms
-                LEFT JOIN match_event me ON me.minute_stat_id = mms.minute_stat_id
+                LEFT JOIN match_event me ON me.match_minute_stats_id = mms.match_minute_stats_id
                 JOIN match m ON mms.match_id = m.match_id
                 JOIN event_type et ON me.event_type_id = et.event_type_id
                 WHERE m.match_id = %s

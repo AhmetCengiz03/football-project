@@ -3,46 +3,49 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 
-from data import get_match_info_for_selected_match
+from data import get_match_info_for_selected_match, get_event_data_for_selected_match
 from timeline import create_timeline_df, create_slider
+from momentum import process_momentum_chart_creation
 
 
-def create_top_bar(timeline_df: pd.DataFrame, selected_minute: int) -> None:
+def create_top_bar(timeline_df: pd.DataFrame) -> None:
     """Create the top bar of the page."""
+    selected_minute = create_slider(timeline_df)
+
     match_info = get_match_info_for_selected_match(
         st.session_state["selected_match_id"])
 
-    _, col2, col3 = st.columns([1.5, 4, 1.5])
+    _, col2, col3 = st.columns([1.5, 8, 1.5])
 
-    minute_data = timeline_df[timeline_df["match_minute"] == selected_minute]
+    minute_data = timeline_df[timeline_df["match_minute"]
+                              == selected_minute]
+
     home_score = int(minute_data["home_score"].iloc[0])
     away_score = int(minute_data["away_score"].iloc[0])
     home_logo = match_info["home_logo_url"].iloc[0]
     away_logo = match_info["away_logo_url"].iloc[0]
 
     with col2:
-        col2a, col2b, col2c = st.columns(3)
+        col2a, col2b, col2c, col2d, col2e = st.columns([3, 1, 2, 1, 3])
         with col2a:
-            st.image(home_logo, width=100)
             st.markdown(f"<h1 style='text-align: center'>{st.session_state["home_team"]
                                                           }</h1>",
                         unsafe_allow_html=True)
-
         with col2b:
+            st.image(home_logo, width=100)
+
+        with col2c:
             st.markdown(f"<h1 style='text-align: center'>{home_score
                                                           } - {away_score}</h1>",
                         unsafe_allow_html=True)
 
-        with col2c:
+        with col2d:
             st.image(away_logo, width=100)
+        with col2e:
             st.markdown(f"<h1 style='text-align: center'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
-    with col3:
-        col2a, col2b, col2c = st.columns(3)
-        with col2b:
-            if st.button("PLAY/PAUSE GAME"):
-                st.write("Game toggled!")
+        return selected_minute
 
 
 def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
@@ -51,68 +54,149 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
                                     == selected_minute]
 
     # I may calculate averages here? For now it is just the stats for this minute for proof of concept
-    latest_data = data_up_to_minute.iloc[-1]
+    minute_data = data_up_to_minute.iloc[-1]
 
-    categories = [
-        "possession_home",
-        "shots_home",
-        "corners_home",
-        "tackles_home"
+    radar_stats = [
+        ("Possession", "possession_home", "possession_away"),
+        ("Shots", "shots_home", "shots_away"),
+        ("Attacks", "attacks_home", "attacks_away"),
+        ("Corners", "corners_home", "corners_away"),
+        ("Passes", "passes_home", "passes_away")
     ]
+    categories = ["Possession", "Shots", "Attacks", "Corners", "Passes"]
+    home_values = []
+    away_values = []
 
-    values = [
-        latest_data.get("possession_home", 0),
-        latest_data.get("shots_home", 0),
-        latest_data.get("corners_home", 0),
-        latest_data.get("tackles_home", 0)
-    ]
-    fig = go.Figure(data=go.Scatterpolar(
-        r=values,
+    for stat_name, home_col, away_col in radar_stats:
+        home_val = minute_data[home_col]
+        away_val = minute_data[away_col]
+        max_val = max(home_val, away_val, 1)
+        home_scaled = (home_val/max_val) * 100
+        away_scaled = (away_val/max_val) * 100
+        home_values.append(home_scaled)
+        away_values.append(away_scaled)
+    fig1 = go.Figure()
+
+    fig1.add_trace(go.Scatterpolar(
+        r=home_values,
         theta=categories,
-        fill='toself'
+        fill='toself',
+        fillcolor="rgba(0,255,0,0.3)",
+        line=dict(color="white", width=2)
     ))
-
-    fig.update_layout(
+    fig1.update_layout(
         polar=dict(
             radialaxis=dict(
-                visible=True
-            ),
+                visible=False
+            ), bgcolor="rgba(0,0,0,0)"
+
         ),
         showlegend=False
     )
 
-    return fig
+    fig2 = go.Figure()
+
+    fig2.add_trace(go.Scatterpolar(
+        r=away_values,
+        theta=categories,
+        fill='toself',
+        fillcolor="rgba(255,0,0,0.3)",
+        line=dict(color="white", width=2)
+    ))
+    fig2.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=False
+            ), bgcolor="rgba(0,0,0,0)"
+
+        ),
+        showlegend=False
+    )
+
+    return fig1, fig2
+
+
+def create_event_buttons(match_events: pd.DataFrame):
+    """Create buttons for all events."""
+    match_event_goal = match_events[match_events["type_name"] == "goal"]
+    goal_data = match_event_goal.sort_values(
+        "match_minute")[["match_minute", "team_id"]].values
+
+    st.markdown("Match Goals")
+    cols = st.columns(3)
+    for i, (minute, team_id) in enumerate(goal_data):
+        with cols[i % 3]:
+            button_label = f"Minute: {int(minute)}"
+            if st.button(button_label, key=f"goal_{i}"):
+                st.session_state["selected_minute"] = int(minute)
+                st.rerun()
+
+
+def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int):
+    """Create a minute by minute comparison."""
+    current_data = timeline_df[timeline_df["match_minute"] == selected_minute]
+    minute_data = current_data.iloc[0]
+    key_stats = [
+        ("Possession", "possession_home", "possession_away", "%"),
+        ("Shots", "shots_home", "shots_away", ""),
+        ("Attacks", "attacks_home", "attacks_away", ""),
+        ("Corners", "corners_home", "corners_away", "")
+    ]
+
+    with st.container():
+        home, _, away = st.columns(3)
+
+        with home:
+            st.markdown("### Home Team")
+            for stat_name, home_col, away_col, unit in key_stats:
+                home_val = minute_data[home_col]
+                st.metric(stat_name, f"{home_val:.0f}{unit}")
+
+        with away:
+            st.markdown("### Home Team")
+            for stat_name, home_col, away_col, unit in key_stats:
+                away_val = minute_data[away_col]
+                st.metric(stat_name, f"{away_val:.0f}{unit}")
 
 
 def create_home_page() -> None:
     """Main function to create the home page."""
     timeline_df = create_timeline_df()
 
-    selected_minute = create_slider(timeline_df)
+    match_events = get_event_data_for_selected_match(
+        st.session_state["selected_match_id"])
 
-    create_top_bar(timeline_df, selected_minute)
+    selected_minute = create_top_bar(timeline_df)
 
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
     # Game momentum/pressure chart
 
+    momentum_chart = process_momentum_chart_creation(timeline_df)
+
+    st.plotly_chart(momentum_chart)
+
     col1, col2, col3 = st.columns(3)
 
-    # Minute by minute stats comparison
+    fig1, fig2 = create_match_progression_radar(timeline_df, selected_minute)
+
     with col1:
-        st.markdown("<h3 style='text-align: center'>Minute by minute statistics</h3>",
-                    unsafe_allow_html=True)
+        st.plotly_chart(fig1)
 
     # Radar chart
     with col2:
-        fig = create_match_progression_radar(timeline_df, selected_minute)
-
-        st.plotly_chart(fig)
+        st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
+                    unsafe_allow_html=True)
+        create_event_buttons(match_events)
 
     # Match events/commentary
     with col3:
-        st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
-                    unsafe_allow_html=True)
+        st.plotly_chart(fig2)
+
+    st.markdown("<h3 style='text-align: center'>Minute by minute statistics</h3>",
+                unsafe_allow_html=True)
+    create_minute_by_minute_comparison(timeline_df, selected_minute)
+
 
 if __name__ == "__main__":
     create_home_page()
