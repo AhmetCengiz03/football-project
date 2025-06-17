@@ -63,7 +63,7 @@ resource "aws_sns_topic" "report-topic" {
 
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.report-topic.arn
-  protocol    = "EMAIL"
+  protocol    = "email"
   endpoint    = "trainee.raf.hall@sigmalabs.co.uk"
 }
 
@@ -84,10 +84,10 @@ data "aws_ecr_image" "pipeline_image" {
     image_tag = "latest"
 }
 
-# data "aws_ecr_image" "notification_image" {
-#     repository_name = "c17-football-notification-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "notification_image" {
+    repository_name = "c17-football-notification-ecr"
+    image_tag = "latest"
+}
 
 # data "aws_ecr_image" "report_image" {
 #     repository_name = "c17-football-report-ecr"
@@ -281,29 +281,24 @@ resource "aws_lambda_function" "pipeline_lambda" {
     }
 }
 
-# resource "aws_lambda_function" "notification_lambda" {
-#     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-#     timeout = 120
-#     memory_size = 512
+resource "aws_lambda_function" "notification_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
 
-#     function_name = "c17-football-notification-lambda"
-#     role          = aws_iam_role.lambda_role.arn
+    function_name = "c17-football-notification-lambda"
+    role          = aws_iam_role.lambda_role.arn
 
-#     package_type = "Image"
-#     image_uri = data.aws_ecr_image.notification_image.image_uri
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.notification_image.image_uri
 
-#     environment {
-#         variables = {
-#             DB_HOST=var.DATABASE_HOST
-#             DB_PORT=var.DATABASE_PORT
-#             DB_USER=var.DATABASE_USERNAME
-#             DB_PASSWORD=var.DATABASE_PASSWORD
-#             DB_NAME=var.DATABASE_NAME
-#             TOPIC_ARN=aws_sns_topic.report-topic.arn
+    environment {
+        variables = {
+            TOPIC_ARN=aws_sns_topic.report-topic.arn
 
-#         }
-#     }
-# }
+        }
+    }
+}
 
 
 # resource "aws_lambda_function" "report_lambda" {
