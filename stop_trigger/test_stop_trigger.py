@@ -34,12 +34,10 @@ def test_get_schedule_groups_success():
 
 def test_delete_scheduler_success():
     mock_client = MagicMock()
-    mock_logger = MagicMock()
     result = delete_scheduler(
         mock_client,
         "test-schedule",
         ["group1", "group2"],
-        mock_logger
     )
 
     assert mock_client.delete_schedule.call_count == 2
