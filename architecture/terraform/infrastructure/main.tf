@@ -387,7 +387,7 @@ resource "aws_scheduler_schedule" "daily_schedule" {
     mode = "OFF"
   }
 
-  schedule_expression =  "cron(50 23 * * ? *)"
+  schedule_expression =  "cron(50 22 * * ? *)"
 
   target {
     arn      = "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
