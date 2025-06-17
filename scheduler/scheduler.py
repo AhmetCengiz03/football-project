@@ -2,7 +2,6 @@
 from os import environ as ENV
 from json import loads, dumps
 from logging import getLogger
-import logging
 from http.client import HTTPSConnection
 from datetime import datetime, timedelta, timezone
 
