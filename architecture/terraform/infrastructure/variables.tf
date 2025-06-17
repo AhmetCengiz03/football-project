@@ -46,3 +46,11 @@ variable API_KEY {
 variable BASE_URL {
     type = string
 }
+
+variable PIPELINE_ARN {
+    type = string
+}
+
+variable PIPELINE_ROLE_ARN {
+    type = string
+}
