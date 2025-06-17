@@ -249,8 +249,8 @@ resource "aws_lambda_function" "scheduler_lambda" {
     environment {
         variables = {
           API_KEY=var.API_KEY
-          TARGET_ARN=aws_lambda_function.match_seeder_lambda.arn
-          ROLE_ARN=aws_iam_role.lambda_role.arn
+          TARGET_ARN="arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-pipeline"
+          ROLE_ARN="arn:aws:iam::129033205317:role/service-role/StepFunctions-c17-football-pipeline-role-7zjvfdmoc"
           AWS_REGION_NAME=var.AWS_REGION
         }         
     }

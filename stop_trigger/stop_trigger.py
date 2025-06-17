@@ -58,13 +58,13 @@ def lambda_handler(event, context):
         load_dotenv()
         logger = getLogger()
         logger.info("Received event: %s", dumps(event))
-        match_end = event["body"].get("game_over")
+        match_end = event["flags"].get("game_over", False)
         match_id = event.get("match_id")
 
         if not all([match_id, match_end]):
             raise ValueError("home_team, away_team and match end are required")
 
-        if match_end == True:
+        if match_end:
             process_schedule_deletion(ENV, match_id, "c17-football")
             return {
                 "status_code": 200,
