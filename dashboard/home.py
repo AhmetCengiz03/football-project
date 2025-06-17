@@ -53,21 +53,21 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
     data_up_to_minute = timeline_df[timeline_df["match_minute"]
                                     == selected_minute]
 
-    # I may calculate averages here? For now it is just the stats for this minute for proof of concept
+    # I may calculate averages here? For now it is just the stats for this minute
     minute_data = data_up_to_minute.iloc[-1]
 
     radar_stats = [
-        ("Possession", "possession_home", "possession_away"),
-        ("Shots", "shots_home", "shots_away"),
-        ("Attacks", "attacks_home", "attacks_away"),
-        ("Corners", "corners_home", "corners_away"),
-        ("Passes", "passes_home", "passes_away")
+        ("shots_home", "shots_away"),
+        ("attacks_home", "attacks_away"),
+        ("possession_home", "possession_away"),
+        ("corners_home", "corners_away"),
+        ("passes_home", "passes_away")
     ]
-    categories = ["Possession", "Shots", "Attacks", "Corners", "Passes"]
+    categories = ["Shots", "Attacks", "Possession", "Corners", "Passes"]
     home_values = []
     away_values = []
 
-    for stat_name, home_col, away_col in radar_stats:
+    for home_col, away_col in radar_stats:
         home_val = minute_data[home_col]
         away_val = minute_data[away_col]
         max_val = max(home_val, away_val, 1)
@@ -75,48 +75,36 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
         away_scaled = (away_val/max_val) * 100
         home_values.append(home_scaled)
         away_values.append(away_scaled)
-    fig1 = go.Figure()
 
-    fig1.add_trace(go.Scatterpolar(
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
         r=home_values,
         theta=categories,
-        fill='toself',
-        fillcolor="rgba(0,255,0,0.3)",
-        line=dict(color="white", width=2)
+        line=dict(color="rgba(0,255,0,1)", width=2),
+        connectgaps=True
     ))
-    fig1.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=False
-            ), bgcolor="rgba(0,0,0,0)"
 
-        ),
-        showlegend=False
-    )
-
-    fig2 = go.Figure()
-
-    fig2.add_trace(go.Scatterpolar(
+    fig.add_trace(go.Scatterpolar(
         r=away_values,
         theta=categories,
-        fill='toself',
-        fillcolor="rgba(255,0,0,0.3)",
-        line=dict(color="white", width=2)
+        line=dict(color="rgba(255,0,0,1)", width=2),
+        connectgaps=True
     ))
-    fig2.update_layout(
+    fig.update_layout(
         polar=dict(
             radialaxis=dict(
-                visible=False
+                visible=True
             ), bgcolor="rgba(0,0,0,0)"
 
         ),
         showlegend=False
     )
 
-    return fig1, fig2
+    return fig
 
 
-def create_event_buttons(match_events: pd.DataFrame):
+def create_event_buttons(match_events: pd.DataFrame) -> None:
     """Create buttons for all events."""
     match_event_goal = match_events[match_events["type_name"] == "goal"]
     goal_data = match_event_goal.sort_values(
@@ -132,7 +120,48 @@ def create_event_buttons(match_events: pd.DataFrame):
                 st.rerun()
 
 
-def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int):
+def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int, stat_name: str):
+    """Compare one stat between home and away."""
+    home_col = f"{stat_name}_home"
+    away_col = f"{stat_name}_away"
+
+    if home_col not in timeline_df.columns or away_col not in timeline_df.columns:
+        st.error(f"Stat {stat_name} not available")
+        return go.Figure()
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=timeline_df["match_minute"],
+        y=timeline_df[home_col],
+        mode="lines+markers",
+        name=st.session_state["home_team"],
+        line=dict(color="rgba(0,255,0,1)", width=4),
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=timeline_df["match_minute"],
+        y=timeline_df[away_col],
+        mode="lines+markers",
+        name=st.session_state["away_team"],
+        line=dict(color="rgba(255,0,0,1)", width=4),
+    ))
+    fig.add_vline(x=selected_minute, line_dash="dash", line_color="white")
+
+    return fig
+
+
+def get_previous_minute_for_delta(timeline_df: pd.DataFrame, selected_minute: int, key_stats: list[tuple]):
+    """Get the previous minute data to get a delta for the metrics."""
+    previous_minute = selected_minute - 1
+    if previous_minute >= 0:
+        prev_data_filtered = timeline_df[timeline_df["match_minute"]
+                                         == previous_minute]
+        if not prev_data_filtered.empty:
+            previous_data = prev_data_filtered.iloc[0]
+
+
+def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int) -> None:
     """Create a minute by minute comparison."""
     current_data = timeline_df[timeline_df["match_minute"] == selected_minute]
     minute_data = current_data.iloc[0]
@@ -147,13 +176,13 @@ def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minut
         home, _, away = st.columns(3)
 
         with home:
-            st.markdown("### Home Team")
+            st.markdown(f"### {st.session_state["home_team"]}")
             for stat_name, home_col, away_col, unit in key_stats:
                 home_val = minute_data[home_col]
                 st.metric(stat_name, f"{home_val:.0f}{unit}")
 
         with away:
-            st.markdown("### Home Team")
+            st.markdown(f"### {st.session_state["away_team"]}")
             for stat_name, home_col, away_col, unit in key_stats:
                 away_val = minute_data[away_col]
                 st.metric(stat_name, f"{away_val:.0f}{unit}")
@@ -172,16 +201,17 @@ def create_home_page() -> None:
 
     # Game momentum/pressure chart
 
-    momentum_chart = process_momentum_chart_creation(timeline_df)
+    momentum_chart = process_momentum_chart_creation(
+        timeline_df, selected_minute)
 
     st.plotly_chart(momentum_chart)
 
     col1, col2, col3 = st.columns(3)
 
-    fig1, fig2 = create_match_progression_radar(timeline_df, selected_minute)
+    fig = create_match_progression_radar(timeline_df, selected_minute)
 
     with col1:
-        st.plotly_chart(fig1)
+        st.plotly_chart(fig)
 
     # Radar chart
     with col2:
@@ -191,11 +221,15 @@ def create_home_page() -> None:
 
     # Match events/commentary
     with col3:
-        st.plotly_chart(fig2)
+        st.markdown("<h3 style='text-align: center'>Minute by Minute Statistics</h3>",
+                    unsafe_allow_html=True)
+        create_minute_by_minute_comparison(timeline_df, selected_minute)
 
-    st.markdown("<h3 style='text-align: center'>Minute by minute statistics</h3>",
-                unsafe_allow_html=True)
-    create_minute_by_minute_comparison(timeline_df, selected_minute)
+    stat_name = st.selectbox("Choose a Stat to Compare",
+                             ["shots", "attacks", "possession", "corners", "fouls"])
+    fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
+
+    st.plotly_chart(fig)
 
 
 if __name__ == "__main__":

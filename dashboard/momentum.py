@@ -30,7 +30,7 @@ def calculate_momentum_score(timeline_df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def create_momentum_chart(df: pd.DataFrame) -> go.Figure:
+def create_momentum_chart(df: pd.DataFrame, selected_minute: int) -> go.Figure:
     """Make a momentum chart for the match."""
     fig = go.Figure()
     fig.add_scatter(
@@ -42,19 +42,20 @@ def create_momentum_chart(df: pd.DataFrame) -> go.Figure:
         x=df["match_minute"],
         y=df["momentum"].where(df["momentum"] >= 0, 0),
         fill="tozeroy", mode="none",
-        fillcolor="rgba(0,255,0,0.3)", name="home"
+        fillcolor="rgba(0,255,0,0.3)", name=st.session_state["home_team"]
     )
     fig.add_scatter(
         x=df["match_minute"],
         y=df["momentum"].where(df["momentum"] <= 0, 0),
         fill="tozeroy", mode="none",
-        fillcolor="rgba(255,0,0,0.3)", name="away"
+        fillcolor="rgba(255,0,0,0.3)", name=st.session_state["away_team"]
     )
+    fig.add_vline(x=selected_minute, line_dash="dash", line_color="white")
     return fig
 
 
-def process_momentum_chart_creation(timeline_df: pd.DataFrame) -> go.Figure:
+def process_momentum_chart_creation(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
     """Main processing function for momentum chart."""
     df = calculate_momentum_score(timeline_df)
-    momentum_chart = create_momentum_chart(df)
+    momentum_chart = create_momentum_chart(df, selected_minute)
     return momentum_chart
