@@ -1,5 +1,4 @@
-"""Second page test."""
+"""Page on individual team statistics."""
 import streamlit as st
 
-
-def select_team_to_analyse():
+st.write("Soon to come")

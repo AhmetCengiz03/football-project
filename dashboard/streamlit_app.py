@@ -18,7 +18,7 @@ def main() -> None:
         ),
         st.Page(
             "page2.py",
-            title="page2",
+            title="team analysis",
             icon=":material/widgets:"
         )
     ]

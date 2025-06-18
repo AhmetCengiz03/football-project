@@ -25,6 +25,17 @@ def competition_selection_filtering(season_data: pd.DataFrame) -> pd.DataFrame:
 
 def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     """Create team selection dropdowns."""
+    # TODO
+    # Need to fix this function
+    comp_data["matchup"] = f"{comp_data["home_team"].iloc[0]} - {comp_data["away_team"].iloc[0]}"
+    matches = sorted(comp_data["matchup"].unique())
+    selected_match = st.selectbox("Matches", matches, key="matchup")
+
+    found_teams = comp_data[comp_data["matchup"] == selected_match]
+
+    return found_teams["home_team"].iloc[0], found_teams["away_team"].iloc[0]
+
+    # will change back to this method after demo
     home_teams = sorted(comp_data["home_team"].unique())
     away_teams = sorted(comp_data["away_team"].unique())
 
@@ -41,6 +52,7 @@ def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
 
 def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str], away_team: list[str]) -> None:
     """Find the match and handle selection."""
+
     matches = comp_data[
         (comp_data["home_team"] == home_team) &
         (comp_data["away_team"] == away_team)
@@ -55,6 +67,8 @@ def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str], away_te
     if len(matches) == 1:
         selected_match = matches.iloc[0]
         st.session_state["selected_match_id"] = int(selected_match["match_id"])
+        st.session_state["home_team"] = home_team
+        st.session_state["away_team"] = away_team
         st.success("Match found")
     else:
         dates = matches["match_date"].astype(str).tolist()
@@ -80,7 +94,7 @@ def create_match_selector() -> None:
         )
 
         home_team, away_team = team_selection(comp_data)
-
+        print(home_team, away_team)
         if home_team and away_team:
             find_and_select_match(comp_data, home_team, away_team)
 

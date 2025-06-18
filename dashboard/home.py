@@ -82,14 +82,14 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
         r=home_values,
         theta=categories,
         line=dict(color="rgba(0,255,0,1)", width=2),
-        connectgaps=True
+        name=st.session_state["home_team"]
     ))
 
     fig.add_trace(go.Scatterpolar(
         r=away_values,
         theta=categories,
         line=dict(color="rgba(255,0,0,1)", width=2),
-        connectgaps=True
+        name=st.session_state["away_team"]
     ))
     fig.update_layout(
         polar=dict(
@@ -98,7 +98,7 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
             ), bgcolor="rgba(0,0,0,0)"
 
         ),
-        showlegend=False
+        showlegend=True
     )
 
     return fig
@@ -151,8 +151,9 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int
     return fig
 
 
-def get_previous_minute_for_delta(timeline_df: pd.DataFrame, selected_minute: int, key_stats: list[tuple]):
+def get_previous_minute_for_delta(timeline_df: pd.DataFrame, selected_minute: int, key_stats: list[tuple]) -> pd.DataFrame:
     """Get the previous minute data to get a delta for the metrics."""
+    # TODO
     previous_minute = selected_minute - 1
     if previous_minute >= 0:
         prev_data_filtered = timeline_df[timeline_df["match_minute"]

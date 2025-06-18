@@ -109,4 +109,4 @@ def create_timeline_df() -> pd.DataFrame:
     st.session_state["match_info"] = match_info
     st.session_state["match_stats"] = match_stats
 
-    return timeline_df
+    return timeline_df.sort_values("match_minute")
