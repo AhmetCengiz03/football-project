@@ -67,7 +67,8 @@ def lambda_handler(event, context):
         process_schedule_deletion(ENV, match_id, "c17-football")
         return {
             "status_code": 200,
-            "message": "Schedule deleted successfully"
+            "message": "Schedule deleted successfully",
+            "match_id": match_id
         }
 
     except Exception as e:
