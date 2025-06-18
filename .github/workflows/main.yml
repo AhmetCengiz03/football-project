@@ -26,6 +26,8 @@ jobs:
           pip install -r pipeline/seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
           pip install -r stop_trigger/requirements.txt
+          pip install -r report/requirements.txt
+
 
       - name: Run Pytest
         run: pytest -vv
@@ -49,6 +51,8 @@ jobs:
           pip install -r pipeline/seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
           pip install -r stop_trigger/requirements.txt
+          pip install -r report/requirements.txt
+
 
       - name: Run Pylint
-        run: pylint --fail-under=8 dashboard/*.py pipeline/*.py scheduler/*.py stop_trigger/*.py
+        run: pylint --fail-under=8 dashboard/*.py pipeline/*.py scheduler/*.py stop_trigger/*.py report/*.py
