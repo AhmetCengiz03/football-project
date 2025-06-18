@@ -12,11 +12,11 @@ import streamlit as st
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
     return psycopg2.connect(
-        host=st.secrets["HOST"],
-        dbname=st.secrets["DATABASE_NAME"],
-        user=st.secrets["DATABASE_USERNAME"],
-        password=st.secrets["DATABASE_PASSWORD"],
-        port=st.secrets["PORT"]
+        host=ENV["HOST"],
+        dbname=ENV["DATABASE_NAME"],
+        user=ENV["DATABASE_USERNAME"],
+        password=ENV["DATABASE_PASSWORD"],
+        port=ENV["PORT"]
     )
 
 
