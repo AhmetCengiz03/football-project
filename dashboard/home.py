@@ -112,7 +112,7 @@ def create_event_buttons(match_events: pd.DataFrame) -> None:
 
     st.markdown("Match Goals")
     cols = st.columns(3)
-    for i, (minute, team_id) in enumerate(goal_data):
+    for i, (minute, _) in enumerate(goal_data):
         with cols[i % 3]:
             button_label = f"Minute: {int(minute)}"
             if st.button(button_label, key=f"goal_{i}"):

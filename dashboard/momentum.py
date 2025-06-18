@@ -1,7 +1,6 @@
 """Script to calculate momentum and create plot."""
 import pandas as pd
 import plotly.graph_objects as go
-import numpy as np
 import streamlit as st
 
 
