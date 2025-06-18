@@ -50,9 +50,10 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
 
 def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
     """Create radar plot for match statistics."""
-    minute_data = timeline_df[timeline_df["match_minute"]
-                              == selected_minute]
+    data_up_to_minute = timeline_df[timeline_df["match_minute"]
+                                    == selected_minute]
 
+    minute_data = data_up_to_minute.iloc[-1]
     # I may calculate averages here? For now it is just the stats for this minute
 
     radar_stats = [
@@ -63,7 +64,7 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
         ("passes_home", "passes_away")
     ]
     categories = ["Shots", "Attacks",
-                  "Possession", "Corners", "Passes", "Shots"]
+                  "Possession", "Corners", "Passes"]
     home_values = []
     away_values = []
 
@@ -76,13 +77,10 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
         home_values.append(home_scaled)
         away_values.append(away_scaled)
 
-    # Repeat first value for complete chart
+    home_values.append(home_values[0])
+    away_values.append(away_values[0])
+    categories.append(categories[0])
 
-    home_values = home_values + home_values[0]
-    away_values = away_values + away_values[0]
-    print(home_values[0])
-    print(home_values)
-    print(categories)
     fig = go.Figure()
 
     fig.add_trace(go.Scatterpolar(

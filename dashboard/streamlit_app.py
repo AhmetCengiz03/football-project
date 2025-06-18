@@ -14,11 +14,21 @@ def main() -> None:
         st.Page(
             "home.py",
             title="home",
-            icon=":material/home:"
+            icon=":material/home:",
         ),
         st.Page(
             "fixtures.py",
             title="fixtures",
+            icon=":material/widgets:"
+        ),
+        st.Page(
+            "team_statistics.py",
+            title="team stats",
+            icon=":material/widgets:"
+        ),
+        st.Page(
+            "subscription.py",
+            title="subscription",
             icon=":material/widgets:"
         )
     ]
