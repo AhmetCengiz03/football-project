@@ -42,7 +42,7 @@ def run_scraper(match_identifier: str | int,
     makedirs(f"match_{str(match_identifier)}")
 
     while True:
-        print(f"Scraping... {scrape_count}")
+        print(f"Scraping... {scrape_count} - {match_identifier}.")
         filename = f"match_{match_identifier}/scrape_{scrape_count}.json"
 
         data = scrape_live_match(url, conn)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     api_conn = HTTPSConnection("api.sportmonks.com")
 
     # Replace with a fixture id, or a team name from the game e.g. 19375375 or "Scotland"
-    identify_match = 19411877
+    identify_match = 19393185
     run_scraper(identify_match, api_token, api_conn)
 
     api_conn.close()

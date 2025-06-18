@@ -100,10 +100,10 @@ __pycache__
 *.tfvars
 
 *.json
-*.txt
 match_*/
 .coverage
 
 .streamlit
 .streamlit/secrets.toml
 .devcontainer
+manual_pipeline.py

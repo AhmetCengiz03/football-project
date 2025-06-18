@@ -1,26 +1,19 @@
 """Scheduler that runs daily to create schedules for tomorrow's matches."""
 from os import environ as ENV
 from json import loads, dumps
-import logging
+from logging import getLogger
 from http.client import HTTPSConnection
-from re import sub
 from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from boto3 import client
 
 
-def configure_logger() -> logging.Logger:
-    """Sets up the logger."""
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    return logger
-
-
 def connect_to_scheduler_client(config: dict) -> client:
     """Connects to the Eventbridge scheduler."""
     return client("scheduler", aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
+                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"],
+                  aws_session_token=config["AWS_SESSION_TOKEN"])
 
 
 def get_all_daily_fixtures(conn: HTTPSConnection, config: dict) -> dict:
@@ -75,11 +68,12 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
 
 def manage_schedule_groups(scheduler_client: client, current_group: str, schedule_prefix: str) -> None:
     """Create current group and cleanup old ones."""
+    logger = getLogger()
     try:
         scheduler_client.create_schedule_group(Name=current_group)
-        logging.info("Created schedule group: %s", current_group)
+        logger.info("Created schedule group: %s", current_group)
     except scheduler_client.exceptions.ConflictException:
-        logging.info("Schedule group %s already exists", current_group)
+        logger.info("Schedule group %s already exists", current_group)
 
     try:
         current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
@@ -97,34 +91,20 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
                         group_name not in keep_groups):
 
                     scheduler_client.delete_schedule_group(Name=group_name)
-                    logging.info("Deleted old schedule group: %s}", group_name)
+                    logger.info("Deleted old schedule group: %s}", group_name)
     except Exception as e:
-        logging.error("Error during group cleanup: %s", e)
-
-
-def format_team_names(team_1: str, team_2: str) -> str:
-    """Format team names for schedule name."""
-    team_1_raw = team_1.get(
-        "team_1_name", "unknown") or "unknown"
-    team_2_raw = team_2.get(
-        "team_2_name", "unknown") or "unknown"
-
-    team_1_clean = sub(r'[^a-zA-Z0-9]', '', team_1_raw).lower()
-    team_2_clean = sub(r'[^a-zA-Z0-9]', '', team_2_raw).lower()
-    return f"{team_1_clean}-{team_2_clean}"[:50]
+        logger.error("Error during group cleanup: %s", e)
 
 
 def create_match_schedule(scheduler_client: client, match: dict,
                           group_name: str, config: dict, schedule_prefix: str) -> None:
     """Create a single match schedule."""
+    logger = getLogger()
     start_time = datetime.strptime(
         match["start_time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     end_time = start_time + timedelta(hours=3)
 
-    formatted_codes = format_team_names(
-        match["team_data"][0], match["team_data"][1])
-
-    schedule_name = f"{schedule_prefix}-{formatted_codes}"
+    schedule_name = f"{schedule_prefix}-{match["match_id"]}"
     try:
         scheduler_client.create_schedule(
             Name=schedule_name,
@@ -141,23 +121,19 @@ def create_match_schedule(scheduler_client: client, match: dict,
             State='ENABLED',
             Description=f"Schedule for fixture: {match['fixture_name']}"
         )
-        logging.info("Created schedule: %s", schedule_name)
+        logger.info("Created schedule: %s", schedule_name)
 
     except scheduler_client.exceptions.ConflictException:
-        logging.info("Schedule %s already exists", schedule_name)
+        logger.info("Schedule %s already exists", schedule_name)
 
 
 def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
     """Main processing function."""
-    configure_logger()
-
     tomorrow_date = (datetime.now(timezone.utc) +
                      timedelta(days=1)).strftime('%Y-%m-%d')
     group_name = f"{schedule_prefix}-{tomorrow_date}-fixtures"
 
-    scheduler_client = client("scheduler",
-                              aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-                              aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
+    scheduler_client = connect_to_scheduler_client(config)
 
     api_conn = HTTPSConnection("api.sportmonks.com")
     fixtures = get_data_from_fixtures(api_conn, config)
@@ -187,6 +163,7 @@ def lambda_handler(event, context):
     Returns:
         Dictionary with status code and response body
     """
+    load_dotenv()
     return process_daily_schedules(ENV, 'c17-football')
 
 
