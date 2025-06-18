@@ -8,10 +8,10 @@ from data import (
 )
 
 
-def calculate_score_from_events(events_df: pd.DataFrame, match_info: pd.DataFrame) -> pd.DataFrame:
+def calculate_score_from_events(match_events: pd.DataFrame, match_info: pd.DataFrame) -> pd.DataFrame:
     """Calculate running score for this match."""
 
-    goal_events = events_df[events_df["type_name"] == "goal"]
+    goal_events = match_events[match_events["type_name"] == "goal"]
 
     if goal_events.empty:
         return pd.DataFrame()
@@ -41,12 +41,12 @@ def check_all_expected_events_exist(event_pivot: pd.DataFrame) -> None:
             event_pivot[event_type] = 0
 
 
-def create_full_match_timeline(events_df: pd.DataFrame, match_info: pd.DataFrame, match_stats: pd.DataFrame) -> pd.DataFrame:
+def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFrame, match_stats: pd.DataFrame) -> pd.DataFrame:
     """Create a full timeline with all stats at every minute."""
 
     timeline = match_stats.copy()
 
-    event_counts = events_df.value_counts(
+    event_counts = match_events.value_counts(
         ["match_minute", "type_name"]).reset_index(name="count")
 
     event_pivot = event_counts.pivot_table(
@@ -61,7 +61,7 @@ def create_full_match_timeline(events_df: pd.DataFrame, match_info: pd.DataFrame
     timeline = timeline.merge(
         event_pivot, on="match_minute", how="left").fillna(0)
 
-    score_data = calculate_score_from_events(events_df, match_info)
+    score_data = calculate_score_from_events(match_events, match_info)
 
     if not score_data.empty:
         timeline = timeline.merge(score_data, on="match_minute", how="left")
@@ -84,7 +84,7 @@ def create_slider(timeline_df: pd.DataFrame) -> st.slider:
         "Select Match Minute",
         min_value=1,
         max_value=max_minute,
-        value=1,
+        value=st.session_state.get("selected_minute", 1),
         step=1
     )
     return selected_minute
@@ -93,7 +93,7 @@ def create_slider(timeline_df: pd.DataFrame) -> st.slider:
 def create_timeline_df() -> pd.DataFrame:
     """Create game timeline dataframe."""
     print("Creating slider")
-    events_df = get_event_data_for_selected_match(
+    match_events = get_event_data_for_selected_match(
         st.session_state["selected_match_id"])
     match_info = get_match_info_for_selected_match(
         st.session_state["selected_match_id"])
@@ -101,6 +101,12 @@ def create_timeline_df() -> pd.DataFrame:
         st.session_state["selected_match_id"])
 
     timeline_df = create_full_match_timeline(
-        events_df, match_info, match_stats)
+        match_events, match_info, match_stats)
 
-    return timeline_df
+    timeline_df["possession_away"] = 100 - timeline_df["possession_home"]
+
+    st.session_state["match_events"] = match_events
+    st.session_state["match_info"] = match_info
+    st.session_state["match_stats"] = match_stats
+
+    return timeline_df.sort_values("match_minute")

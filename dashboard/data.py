@@ -12,11 +12,11 @@ import streamlit as st
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
     return psycopg2.connect(
-        host=ENV["HOST"],
-        dbname=ENV["DATABASE_NAME"],
-        user=ENV["DATABASE_USERNAME"],
-        password=ENV["DATABASE_PASSWORD"],
-        port=ENV["PORT"]
+        host=st.secrets["HOST"],
+        dbname=st.secrets["DATABASE_NAME"],
+        user=st.secrets["DATABASE_USERNAME"],
+        password=st.secrets["DATABASE_PASSWORD"],
+        port=st.secrets["PORT"]
     )
 
 
@@ -57,7 +57,7 @@ def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     query = """
                 SELECT me.*, et.type_name, mms.match_minute
                 FROM match_minute_stats mms
-                LEFT JOIN match_event me ON me.minute_stat_id = mms.minute_stat_id
+                LEFT JOIN match_event me ON me.match_minute_stats_id = mms.match_minute_stats_id
                 JOIN match m ON mms.match_id = m.match_id
                 JOIN event_type et ON me.event_type_id = et.event_type_id
                 WHERE m.match_id = %s
