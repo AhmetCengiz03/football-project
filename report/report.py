@@ -17,7 +17,8 @@ from html_report import generate_html
 def connect_to_s3_client(config) -> client:
     """Connects to the S3 bucket."""
     return client("s3",  aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"])
+                  aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"],
+                  aws_session_token=config["AWS_SESSION_TOKEN"])
 
 
 def upload_file(config: dict, local_path: str, s3_name: str) -> bool:
