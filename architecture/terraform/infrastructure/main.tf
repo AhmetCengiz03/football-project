@@ -63,7 +63,7 @@ resource "aws_sns_topic" "report-topic" {
 
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.report-topic.arn
-  protocol    = "EMAIL"
+  protocol    = "email"
   endpoint    = "trainee.raf.hall@sigmalabs.co.uk"
 }
 
@@ -84,15 +84,15 @@ data "aws_ecr_image" "pipeline_image" {
     image_tag = "latest"
 }
 
-# data "aws_ecr_image" "notification_image" {
-#     repository_name = "c17-football-notification-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "notification_image" {
+    repository_name = "c17-football-notification-ecr"
+    image_tag = "latest"
+}
 
-# data "aws_ecr_image" "report_image" {
-#     repository_name = "c17-football-report-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "report_image" {
+    repository_name = "c17-football-report-ecr"
+    image_tag = "latest"
+}
 
 data "aws_ecr_image" "scheduler_stopper_image" {
     repository_name = "c17-football-scheduler-stopper-ecr"
@@ -249,8 +249,8 @@ resource "aws_lambda_function" "scheduler_lambda" {
     environment {
         variables = {
           API_KEY=var.API_KEY
-          TARGET_ARN="arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-pipeline"
-          ROLE_ARN="arn:aws:iam::129033205317:role/service-role/StepFunctions-c17-football-pipeline-role-7zjvfdmoc"
+          TARGET_ARN=var.PIPELINE_ARN
+          ROLE_ARN=var.PIPELINE_ROLE_ARN
           AWS_REGION_NAME=var.AWS_REGION
         }         
     }
@@ -281,55 +281,50 @@ resource "aws_lambda_function" "pipeline_lambda" {
     }
 }
 
-# resource "aws_lambda_function" "notification_lambda" {
-#     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-#     timeout = 120
-#     memory_size = 512
+resource "aws_lambda_function" "notification_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
 
-#     function_name = "c17-football-notification-lambda"
-#     role          = aws_iam_role.lambda_role.arn
+    function_name = "c17-football-notification-lambda"
+    role          = aws_iam_role.lambda_role.arn
 
-#     package_type = "Image"
-#     image_uri = data.aws_ecr_image.notification_image.image_uri
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.notification_image.image_uri
 
-#     environment {
-#         variables = {
-#             DB_HOST=var.DATABASE_HOST
-#             DB_PORT=var.DATABASE_PORT
-#             DB_USER=var.DATABASE_USERNAME
-#             DB_PASSWORD=var.DATABASE_PASSWORD
-#             DB_NAME=var.DATABASE_NAME
-#             TOPIC_ARN=aws_sns_topic.report-topic.arn
+    environment {
+        variables = {
+            TOPIC_ARN=aws_sns_topic.report-topic.arn
 
-#         }
-#     }
-# }
+        }
+    }
+}
 
 
-# resource "aws_lambda_function" "report_lambda" {
-#     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-#     timeout = 120
-#     memory_size = 512
+resource "aws_lambda_function" "report_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
 
-#     function_name = "c17-football-report-lambda"
-#     role          = aws_iam_role.lambda_role.arn
+    function_name = "c17-football-report-lambda"
+    role          = aws_iam_role.lambda_role.arn
 
-#     package_type = "Image"
-#     image_uri = data.aws_ecr_image.report_image.image_uri
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.report_image.image_uri
 
-#     environment {
-#         variables = {
-#             DB_HOST=var.DATABASE_HOST
-#             DB_PORT=var.DATABASE_PORT
-#             DB_USER=var.DATABASE_USERNAME
-#             DB_PASSWORD=var.DATABASE_PASSWORD
-#             DB_NAME=var.DATABASE_NAME
-#             TOPIC_REGION=var.AWS_REGION
-#             S3_BUCKET=aws_s3_bucket.s3_bucket.bucket
+    environment {
+        variables = {
+          DB_NAME=var.DATABASE_NAME
+          DB_HOST=var.DATABASE_HOST
+          DB_USER=var.DATABASE_USERNAME
+          DB_PASSWORD=var.DATABASE_PASSWORD
+          DB_PORT=var.DATABASE_PORT
 
-#         }
-#     }
-# }
+          OPENAI_API_KEY=var.OPEN_AI_API_KEY
+          S3_BUCKET=var.S3_BUCKET
+        }
+    }
+}
 
 resource "aws_lambda_function" "scheduler_stopper_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
@@ -377,7 +372,7 @@ resource "aws_iam_role_policy" "eventbridge_invoke_policy" {
             "Action"    : ["states:StartExecution"],
             "Effect"    : "Allow",
             "Resource"  : [
-              "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
+              var.SCHEDULE_ARN
             ]
         }
     ] 
@@ -392,10 +387,10 @@ resource "aws_scheduler_schedule" "daily_schedule" {
     mode = "OFF"
   }
 
-  schedule_expression =  "cron(50 23 * * ? *)"
+  schedule_expression =  "cron(50 22 * * ? *)"
 
   target {
-    arn      = "arn:aws:states:eu-west-2:129033205317:stateMachine:c17-football-scheduling"
+    arn      = var.SCHEDULE_ARN
     role_arn = aws_iam_role.scheduler_role.arn
   }
 }

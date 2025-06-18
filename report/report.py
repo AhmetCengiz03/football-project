@@ -84,7 +84,7 @@ def create_email_message(pdf_path: str, match_title: str,
     return msg
 
 
-def generate_complete_report(config: dict, match_id: int, output_dir: str = "reports",
+def generate_complete_report(config: dict, match_id: int, output_dir: str,
                              sender_email: str = None, recipient_email: str = None) -> dict[str, str]:
     """Generate complete match report with HTML, PDF, and email."""
 
@@ -139,7 +139,7 @@ def lambda_handler(event, context) -> None:
     generate_complete_report(
         ENV,
         match_id,
-        output_dir="reports",
+        output_dir="/tmp/reports",
         sender_email="trainee.ahmet.cengiz@sigmalabs.co.uk",
         recipient_email="trainee.ahmet.cengiz@sigmalabs.co.uk"
     )

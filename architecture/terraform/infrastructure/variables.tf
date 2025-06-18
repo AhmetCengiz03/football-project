@@ -46,3 +46,23 @@ variable API_KEY {
 variable BASE_URL {
     type = string
 }
+
+variable PIPELINE_ARN {
+    type = string
+}
+
+variable PIPELINE_ROLE_ARN {
+    type = string
+}
+
+variable SCHEDULE_ARN {
+    type = string
+}
+
+variable OPEN_AI_API_KEY {
+    type = string
+}
+
+variable S3_BUCKET {
+  type = string
+}
