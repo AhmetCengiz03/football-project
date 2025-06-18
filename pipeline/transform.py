@@ -49,7 +49,9 @@ STATS_COLUMNS = [
     "yellowcards_away",
     "yellowcards_home",
     "redcards_away",
-    "redcards_home"
+    "redcards_home",
+    "penalties_away",
+    "penalties_home"
 ]
 
 BULK_COLUMNS = [
