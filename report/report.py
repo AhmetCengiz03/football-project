@@ -103,7 +103,6 @@ def generate_complete_report(config: dict, match_id: int, output_dir: str = "rep
         upload_file(config, pdf_path, f"reports/{pdf_filename}")
 
     results = {
-        'html_path': html_path,
         'pdf_path': pdf_path if pdf_success else None,
         'report_data': report.model_dump()
     }
