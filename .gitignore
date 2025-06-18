@@ -103,3 +103,6 @@ __pycache__
 *.txt
 match_*/
 .coverage
+
+.streamlit
+.streamlit/secrets.toml
