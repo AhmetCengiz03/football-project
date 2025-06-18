@@ -120,7 +120,7 @@ def create_event_buttons(match_events: pd.DataFrame) -> None:
                 st.rerun()
 
 
-def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int, stat_name: str):
+def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int, stat_name: str) -> go.Figure:
     """Compare one stat between home and away."""
     home_col = f"{stat_name}_home"
     away_col = f"{stat_name}_away"
@@ -149,17 +149,6 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int
     fig.add_vline(x=selected_minute, line_dash="dash", line_color="white")
 
     return fig
-
-
-def get_previous_minute_for_delta(timeline_df: pd.DataFrame, selected_minute: int, key_stats: list[tuple]) -> pd.DataFrame:
-    """Get the previous minute data to get a delta for the metrics."""
-    # TODO
-    previous_minute = selected_minute - 1
-    if previous_minute >= 0:
-        prev_data_filtered = timeline_df[timeline_df["match_minute"]
-                                         == previous_minute]
-        if not prev_data_filtered.empty:
-            previous_data = prev_data_filtered.iloc[0]
 
 
 def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int) -> None:
