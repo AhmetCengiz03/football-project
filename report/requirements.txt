@@ -1,0 +1,9 @@
+pylint
+pytest
+pytest-cov
+python-dotenv
+pandas
+openai
+pydantic
+psycopg2-binary
+xhtml2pdf
