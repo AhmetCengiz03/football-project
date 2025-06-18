@@ -268,7 +268,7 @@ def transform_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Runs the transformation process."""
 
     df = drop_bulk_columns(df, BULK_COLUMNS)
-    df_map = get_type_mapping("types_map_api.xlsx")
+    df_map = get_type_mapping("/var/task/types_map_api.xlsx")
     df_match_event = get_match_event_df(df)
 
     if df_match_event.empty:

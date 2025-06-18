@@ -43,15 +43,13 @@ def lambda_handler(event=None, context=None):
     else:
         logger.info("%s game has not started yet.", match_id)
         return {
-            "status_code": 200,
-            "body": "Game has not started yet.",
+            "flags": "Game has not started yet.",
             "match_id": match_id
         }
 
     flags["goal_check"] = new_goals
     return {
-        "status_code": 200,
-        "body": flags,
+        "flags": flags,
         "match_id": match_id
     }
 
