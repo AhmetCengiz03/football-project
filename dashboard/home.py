@@ -8,7 +8,7 @@ from timeline import create_timeline_df, create_slider
 from momentum import process_momentum_chart_creation
 
 
-def create_top_bar(timeline_df: pd.DataFrame) -> None:
+def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
     """Create the top bar of the page."""
     selected_minute = create_slider(timeline_df)
 
@@ -174,7 +174,7 @@ def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minut
     ]
 
     with st.container():
-        home, _, away = st.columns(3)
+        home, _, away = st.columns([4, 1, 4])
 
         with home:
             st.markdown(f"### {st.session_state["home_team"]}")
