@@ -100,4 +100,4 @@ def create_match_selector() -> None:
         if home_team and away_team:
             find_and_select_match(comp_data, home_team, away_team)
 
-        st.image("playbyplay.png")
+        st.image("dashboard/playbyplay.png")
