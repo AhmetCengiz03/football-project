@@ -17,8 +17,8 @@ def main() -> None:
             icon=":material/home:"
         ),
         st.Page(
-            "page2.py",
-            title="team analysis",
+            "fixtures.py",
+            title="fixtures",
             icon=":material/widgets:"
         )
     ]

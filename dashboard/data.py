@@ -95,3 +95,11 @@ def get_match_info_for_selected_match(match_id: int) -> pd.DataFrame:
             WHERE match_id = %s
             """
     return execute_query(query, match_id)
+
+
+def get_unique_match_ids_in_match_minute_stats():
+    """Retrieve all unique match ids from match minute stats."""
+    query = """
+            SELECT UNIQUE(match_id)
+            FROM match_minute_stats;
+            """

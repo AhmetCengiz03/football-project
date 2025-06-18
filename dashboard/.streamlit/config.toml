@@ -2,26 +2,26 @@
 enableStaticServing = true
 
 [[theme.fontFaces]]
-family = "arial"
-url = "app/static/arial-Regular.ttf"
+family = "Arial"
+url = "app/static/Arial-Regular.ttf"
 style="normal"
 weight="400"
 
 [[theme.fontFaces]]
-family = "arial"
-url = "app/static/arial-Italic.ttf"
+family = "Arial"
+url = "app/static/Arial-Italic.ttf"
 style="italic"
 weight="400"
 
 [[theme.fontFaces]]
-family = "arial"
-url = "app/static/arial-Bold.ttf"
+family = "Arial"
+url = "app/static/Arial-Bold.ttf"
 style="normal"
 weight="700"
 
 [[theme.fontFaces]]
-family = "arial"
-url = "app/static/arial-BoldItalic.ttf"
+family = "Arial"
+url = "app/static/Arial-BoldItalic.ttf"
 style="italic"
 weight="700"
 
@@ -36,7 +36,7 @@ linkColor = "#9D9D9D"
 borderColor = "#7F7F7F"
 showWidgetBorder = false
 baseRadius = "0.3rem"
-font = "arial"
+font = "Arial"
 
 [theme.sidebar]
 backgroundColor = "#000000"
