@@ -51,6 +51,6 @@ The script is designed to run as an AWS Lambda function.
 
 To run locally:
 
-`python scheduler.py
+`python scheduler.py`
 
 Ensure your `.env` file contains all required environment variables.
