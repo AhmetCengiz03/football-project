@@ -1,4 +1,4 @@
-# Football Fixture Scheduler
+# Fixture Scheduler
 
 A Python script that automatically creates AWS EventBridge schedules for football matches happening the next day. The script fetches fixture data from the SportMonks API and creates individual schedules for each match.
 
