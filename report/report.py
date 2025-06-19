@@ -1,3 +1,5 @@
+import boto3
+import os
 import logging
 from os import makedirs, environ as ENV
 from os.path import basename, join
@@ -117,6 +119,30 @@ def generate_complete_report(config: dict, match_id: int, output_dir: str,
 
     print(f"Report generation complete! Files saved to {output_dir}")
     return results
+
+
+def send_match_email(emails: list[str], subject: str, body_html: str):
+    """Sends emails to subscribed users."""
+    client = boto3.client('ses', region_name='eu-west-2')
+
+    response = client.send_email(
+        Source=ENV['SES_FROM_EMAIL'],
+        Destination={'ToAddresses': emails},
+        Message={
+            'Subject': {
+                'Data': subject
+            },
+            'Body': {
+                'Text': {
+                    'Data': "HELP"
+                },
+                'Html': {
+                    'Data': body_html
+                },
+            }
+        }
+    )
+    return response
 
 
 def lambda_handler(event, context) -> None:
