@@ -70,9 +70,9 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
     """Create current group and cleanup old ones."""
     try:
         scheduler_client.create_schedule_group(Name=current_group)
-        logging.info("Created schedule group: %s", current_group)
+        logging.info("Created schedule group: %s.", current_group)
     except scheduler_client.exceptions.ConflictException:
-        logging.info("Schedule group %s already exists", current_group)
+        logging.info("Schedule group %s already exists.", current_group)
 
     try:
         current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
@@ -90,9 +90,9 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
                         group_name not in keep_groups):
 
                     scheduler_client.delete_schedule_group(Name=group_name)
-                    logging.info("Deleted old schedule group: %s}", group_name)
+                    logging.info("Deleted old schedule group: %s.}", group_name)
     except Exception as e:
-        logging.error("Error during group cleanup: %s", e)
+        logging.error("Error during group cleanup: %s.", e)
 
 
 def create_match_schedule(scheduler_client: client, match: dict,
@@ -119,7 +119,7 @@ def create_match_schedule(scheduler_client: client, match: dict,
             State='ENABLED',
             Description=f"Schedule for fixture: {match['fixture_name']}"
         )
-        logging.info("Created schedule: %s", schedule_name)
+        logging.info("Created schedule: %s.", schedule_name)
 
     except scheduler_client.exceptions.ConflictException:
         logging.info("Schedule %s already exists", schedule_name)
