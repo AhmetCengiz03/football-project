@@ -95,8 +95,8 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
         if isinstance(match_minute_stats_id, list):
             event_df["match_minute_stats_id"] = match_minute_stats_id[0][0]
 
-        match_event_df = event_df[["match_event_id",
-                                   "match_minute_stats_id", "event_type_id", "team_id"]]
+        match_event_df = event_df[[
+            "match_event_id", "match_minute_stats_id", "event_type_id", "team_id"]]
 
         goal_check = get_if_goal_scored_this_run(event_df, db_conn)
 
