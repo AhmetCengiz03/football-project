@@ -55,11 +55,13 @@ def get_all_matches() -> pd.DataFrame:
 def get_event_data_for_selected_match(match_id: int) -> pd.DataFrame:
     """Retrieve all event data for the selected match."""
     query = """
-                SELECT me.*, et.type_name, mms.match_minute
+                SELECT me.*, et.type_name, mms.match_minute, p.player_name
                 FROM match_minute_stats mms
                 LEFT JOIN match_event me ON me.match_minute_stats_id = mms.match_minute_stats_id
                 JOIN match m ON mms.match_id = m.match_id
                 JOIN event_type et ON me.event_type_id = et.event_type_id
+                JOIN player_match_event pme ON pme.match_event_id = me.match_event_id
+                JOIN player p on p.player_id = pme.player_id
                 WHERE m.match_id = %s
                  """
     return execute_query(query, match_id)
@@ -104,3 +106,12 @@ def get_unique_match_ids_in_match_minute_stats() -> pd.DataFrame:
             FROM match_minute_stats;
             """
     return execute_query(query)
+
+
+def get_team_from_match_id(team_id: int) -> pd.DataFrame:
+    query = """
+            SELECT team_name
+            FROM team
+            WHERE team_id = %s;
+            """
+    return execute_query(query, team_id)

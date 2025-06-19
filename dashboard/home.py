@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 
-from data import get_match_info_for_selected_match, get_event_data_for_selected_match
+from data import get_match_info_for_selected_match, get_event_data_for_selected_match, get_team_from_match_id
 from timeline import create_timeline_df, create_slider
 from momentum import process_momentum_chart_creation
 
@@ -111,15 +111,12 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
 
 def create_event_buttons(match_events: pd.DataFrame) -> None:
     """Create buttons for all events."""
-    match_event_goal = match_events[match_events["type_name"] == "goal"]
-    goal_data = match_event_goal.sort_values(
-        "match_minute")[["match_minute", "team_id"]].values
-
-    st.markdown("Match Goals")
+    event_data = match_events.sort_values(
+        "match_minute")[["type_name", "match_minute", "player_name"]].values
     cols = st.columns(3)
-    for i, (minute, _) in enumerate(goal_data):
+    for i, (event_type, minute, player_name) in enumerate(event_data):
         with cols[i % 3]:
-            button_label = f"Minute: {int(minute)}"
+            button_label = f"{minute} | {event_type} | {player_name}"
             if st.button(button_label, key=f"goal_{i}"):
                 st.session_state["selected_minute"] = int(minute)
                 st.rerun()
@@ -156,7 +153,7 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int
     return fig
 
 
-def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int) -> None:
+def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int) -> tuple[pd.DataFrame, list]:
     """Create a minute by minute comparison."""
     current_data = timeline_df[timeline_df["match_minute"] == selected_minute]
     minute_data = current_data.iloc[0]
@@ -166,6 +163,8 @@ def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minut
         ("Attacks", "attacks_home", "attacks_away", ""),
         ("Corners", "corners_home", "corners_away", "")
     ]
+
+    return minute_data, key_stats
 
     with st.container():
         home, _, away = st.columns([4, 1, 4])
@@ -205,23 +204,37 @@ def create_home_page() -> None:
 
     fig = create_match_progression_radar(timeline_df, selected_minute)
 
+    minute_data, key_stats = create_minute_by_minute_comparison(
+        timeline_df, selected_minute)
+
     with col1:
-        st.plotly_chart(fig)
+        st.markdown(f"### {st.session_state["home_team"]}")
+        for stat_name, home_col, _, unit in key_stats:
+            home_val = minute_data[home_col]
+            st.metric(stat_name, f"{home_val:.0f}{unit}")
 
     # Radar chart
     with col2:
-        st.markdown("<h3 style='text-align: center'>Match Events/Commentary</h1>",
+        st.markdown("<h3 style='text-align: center'>Match Events</h1>",
                     unsafe_allow_html=True)
         create_event_buttons(match_events)
+        st.plotly_chart(fig)
 
     # Match events/commentary
     with col3:
-        st.markdown("<h3 style='text-align: center'>Minute by Minute Statistics</h3>",
-                    unsafe_allow_html=True)
-        create_minute_by_minute_comparison(timeline_df, selected_minute)
+        col3aa, col3ab = st.columns([1, 5])
+        with col3ab:
+            st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
+                        unsafe_allow_html=True)
+        col3a, col3b = st.columns([3, 1])
+        with col3b:
+            for stat_name, home_col, away_col, unit in key_stats:
+                away_val = minute_data[away_col]
+                st.metric(stat_name, f"{away_val:.0f}{unit}")
 
     stat_name = st.selectbox("Choose a Stat to Compare",
                              ["shots", "attacks", "possession", "corners", "fouls"])
+
     fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
 
     st.plotly_chart(fig)
