@@ -13,22 +13,22 @@ def main() -> None:
     pages = [
         st.Page(
             "home.py",
-            title="home",
+            title="Home",
             icon=":material/home:",
         ),
         st.Page(
             "fixtures.py",
-            title="fixtures",
+            title="Fixtures",
             icon=":material/widgets:"
         ),
         st.Page(
             "team_statistics.py",
-            title="team stats",
+            title="Team Stats",
             icon=":material/widgets:"
         ),
         st.Page(
             "subscription.py",
-            title="subscription",
+            title="Subscription",
             icon=":material/widgets:"
         )
     ]

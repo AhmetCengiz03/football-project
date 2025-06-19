@@ -1,7 +1,11 @@
 """Home page."""
+import altair as alt
+from vega_datasets import data
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import altair as alt
+from vega_datasets import data
 
 from data import get_match_info_for_selected_match, get_event_data_for_selected_match, get_team_from_match_id
 from timeline import create_timeline_df, create_slider
@@ -48,7 +52,7 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
         return selected_minute
 
 
-def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
+def create_match_progression_radar_attack(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
     """Create radar plot for match statistics."""
     data_up_to_minute = timeline_df[timeline_df["match_minute"]
                                     == selected_minute]
@@ -97,6 +101,69 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
         name=st.session_state["away_team"]
     ))
     fig.update_layout(
+        title="Attacking stats",
+        polar=dict(
+            radialaxis=dict(
+                visible=True
+            ), bgcolor="rgba(0,0,0,0)"
+
+        ),
+        showlegend=True
+    )
+
+    return fig
+
+
+def create_match_progression_radar_defence(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
+    """Create radar plot for match statistics."""
+    data_up_to_minute = timeline_df[timeline_df["match_minute"]
+                                    == selected_minute]
+
+    minute_data = data_up_to_minute.iloc[-1]
+    # I may calculate averages here? For now it is just the stats for this minute
+
+    radar_stats = [
+        ("saves_home", "saves_away"),
+        ("fouls_home", "fouls_away"),
+        ("tackles_home", "tackles_away"),
+        ("interceptions_home", "interceptions_away"),
+        ("shots_blocked_home", "shots_blocked_away")
+    ]
+    categories = ["Saves", "Fouls", "Tackles",
+                  "Interceptions", "Shots_blocked"]
+    home_values = []
+    away_values = []
+
+    for home_col, away_col in radar_stats:
+        home_val = minute_data[home_col]
+        away_val = minute_data[away_col]
+        max_val = max(home_val, away_val, 1)
+        home_scaled = (home_val/max_val) * 100
+        away_scaled = (away_val/max_val) * 100
+        home_values.append(home_scaled)
+        away_values.append(away_scaled)
+
+    home_values.append(home_values[0])
+    away_values.append(away_values[0])
+    categories.append(categories[0])
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=home_values,
+        theta=categories,
+        line=dict(color="rgba(0,255,0,1)", width=2),
+        name=st.session_state["home_team"]
+    ))
+
+    fig.add_trace(go.Scatterpolar(
+        r=away_values,
+        theta=categories,
+        line=dict(color="rgba(255,0,0,1)", width=2),
+        name=st.session_state["away_team"]
+    ))
+    fig.update_layout(
+        title='Defensive Stats',
         polar=dict(
             radialaxis=dict(
                 visible=True
@@ -202,9 +269,11 @@ def create_home_page() -> None:
 
     col1, col2, col3 = st.columns(3)
 
-    fig = create_match_progression_radar(timeline_df, selected_minute)
-
     minute_data, key_stats = create_minute_by_minute_comparison(
+        timeline_df, selected_minute)
+    fig_attack = create_match_progression_radar_attack(
+        timeline_df, selected_minute)
+    fig_defence = create_match_progression_radar_defence(
         timeline_df, selected_minute)
 
     with col1:
@@ -218,7 +287,6 @@ def create_home_page() -> None:
         st.markdown("<h3 style='text-align: center'>Match Events</h1>",
                     unsafe_allow_html=True)
         create_event_buttons(match_events)
-        st.plotly_chart(fig)
 
     # Match events/commentary
     with col3:
@@ -232,12 +300,20 @@ def create_home_page() -> None:
                 away_val = minute_data[away_col]
                 st.metric(stat_name, f"{away_val:.0f}{unit}")
 
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig_attack)
+    with col2:
+        st.plotly_chart(fig_defence)
+
     stat_name = st.selectbox("Choose a Stat to Compare",
                              ["shots", "attacks", "possession", "corners", "fouls"])
 
     fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
 
     st.plotly_chart(fig)
+
+    st.dataframe(timeline_df)
 
 
 if __name__ == "__main__":
