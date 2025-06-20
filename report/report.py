@@ -39,7 +39,7 @@ def html_to_pdf(html_content: str, output_path: str) -> bool:
             pdf = pisa.CreatePDF(html_content, dest=result_file)
         return not pdf.err
     except Exception as e:
-        print(f"Error creating PDF: {e}")
+        logging.error("Error creating PDF: %s", e)
         return False
 
 
@@ -49,13 +49,13 @@ def generate_complete_report(config: dict, match_id: int, output_dir: str,
 
     makedirs(output_dir, exist_ok=True)
 
-    print(f"Generating AI analysis for match {match_id}...")
+    logging.info("Generating AI analysis for match %s...", match_id)
     report = generate_match_report(config, match_id)
 
-    print("Creating HTML report...")
+    logging.info("Creating HTML report...")
     html_content = generate_html(report)
 
-    print("Converting to PDF...")
+    logging.info("Converting to PDF...")
     pdf_filename = f"match_{match_id}_report.pdf"
     pdf_path = join(output_dir, pdf_filename)
     pdf_success = html_to_pdf(html_content, pdf_path)
