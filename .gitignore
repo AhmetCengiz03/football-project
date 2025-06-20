@@ -107,3 +107,4 @@ match_*/
 .streamlit/secrets.toml
 .devcontainer
 manual_pipeline.py
+dashboard/.streamlit/secrets.toml

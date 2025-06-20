@@ -62,12 +62,14 @@ def lambda_handler(event, context):
         match_id = event.get("match_id")
 
         if not match_id:
-            raise ValueError("home_team, away_team and match end are required.")
+            raise ValueError(
+                "home_team, away_team and match end are required.")
 
         process_schedule_deletion(ENV, match_id, "c17-football")
         return {
             "status_code": 200,
-            "message": "Schedule deleted successfully."
+            "message": "Schedule deleted successfully",
+            "match_id": match_id
         }
 
     except Exception as e:

@@ -58,3 +58,11 @@ variable PIPELINE_ROLE_ARN {
 variable SCHEDULE_ARN {
     type = string
 }
+
+variable OPEN_AI_API_KEY {
+    type = string
+}
+
+variable S3_BUCKET {
+  type = string
+}

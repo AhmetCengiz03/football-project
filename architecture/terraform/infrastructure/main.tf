@@ -89,10 +89,10 @@ data "aws_ecr_image" "notification_image" {
     image_tag = "latest"
 }
 
-# data "aws_ecr_image" "report_image" {
-#     repository_name = "c17-football-report-ecr"
-#     image_tag = "latest"
-# }
+data "aws_ecr_image" "report_image" {
+    repository_name = "c17-football-report-ecr"
+    image_tag = "latest"
+}
 
 data "aws_ecr_image" "scheduler_stopper_image" {
     repository_name = "c17-football-scheduler-stopper-ecr"
@@ -301,30 +301,30 @@ resource "aws_lambda_function" "notification_lambda" {
 }
 
 
-# resource "aws_lambda_function" "report_lambda" {
-#     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
-#     timeout = 120
-#     memory_size = 512
+resource "aws_lambda_function" "report_lambda" {
+    depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
+    timeout = 120
+    memory_size = 512
 
-#     function_name = "c17-football-report-lambda"
-#     role          = aws_iam_role.lambda_role.arn
+    function_name = "c17-football-report-lambda"
+    role          = aws_iam_role.lambda_role.arn
 
-#     package_type = "Image"
-#     image_uri = data.aws_ecr_image.report_image.image_uri
+    package_type = "Image"
+    image_uri = data.aws_ecr_image.report_image.image_uri
 
-#     environment {
-#         variables = {
-#             DB_HOST=var.DATABASE_HOST
-#             DB_PORT=var.DATABASE_PORT
-#             DB_USER=var.DATABASE_USERNAME
-#             DB_PASSWORD=var.DATABASE_PASSWORD
-#             DB_NAME=var.DATABASE_NAME
-#             TOPIC_REGION=var.AWS_REGION
-#             S3_BUCKET=aws_s3_bucket.s3_bucket.bucket
+    environment {
+        variables = {
+          DB_NAME=var.DATABASE_NAME
+          DB_HOST=var.DATABASE_HOST
+          DB_USER=var.DATABASE_USERNAME
+          DB_PASSWORD=var.DATABASE_PASSWORD
+          DB_PORT=var.DATABASE_PORT
 
-#         }
-#     }
-# }
+          OPENAI_API_KEY=var.OPEN_AI_API_KEY
+          S3_BUCKET=var.S3_BUCKET
+        }
+    }
+}
 
 resource "aws_lambda_function" "scheduler_stopper_lambda" {
     depends_on = [ aws_iam_role_policy_attachment.lambda_role_attach ]
