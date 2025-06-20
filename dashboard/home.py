@@ -167,20 +167,22 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame,
 
 
 def create_minute_by_minute_comparison(timeline_df: pd.DataFrame,
-                                       selected_minute: int) -> tuple[pd.DataFrame, list]:
+                                       selected_minute: int) -> tuple[pd.DataFrame, list, pd.DataFrame]:
     """Create a minute by minute comparison."""
     current_data = timeline_df[timeline_df["match_minute"] == selected_minute]
-    # previous_minute = timeline_df[timeline_df["match_minute"] == (selected_minute - 1)]
+    previous_minute = timeline_df[timeline_df["match_minute"] == (
+        selected_minute - 1)]
     minute_data = current_data.iloc[0]
+    previous_minute_data = previous_minute.iloc[0]
     key_stats = [
         ("Possession", "possession_home", "possession_away", "%"),
         ("Shots", "shots_home", "shots_away", ""),
         ("Attacks", "attacks_home", "attacks_away", ""),
         ("Corners", "corners_home", "corners_away", ""),
-        ("Fouls", "fouls_home", "fouls_away", ""),
+        ("Fouls", "fouls_home", "fouls_away", "")
     ]
 
-    return minute_data, key_stats
+    return minute_data, key_stats, previous_minute_data
 
 
 def create_home_page() -> None:
@@ -203,7 +205,7 @@ def create_home_page() -> None:
 
     col1, col2, col3 = st.columns(3)
 
-    minute_data, key_stats = create_minute_by_minute_comparison(
+    minute_data, key_stats, previous_minute_data = create_minute_by_minute_comparison(
         timeline_df, selected_minute)
 
     radar_stats = [
@@ -233,7 +235,9 @@ def create_home_page() -> None:
         st.markdown(f"### {st.session_state["home_team"]}")
         for stat_name, home_col, _, unit in key_stats:
             home_val = minute_data[home_col]
-            st.metric(stat_name, f"{home_val:.0f}{unit}")
+            home_val_previous = previous_minute_data[home_col]
+            delta = int(home_val - home_val_previous)
+            st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
 
     with col2:
         st.markdown("<h3 style='text-align: center'>Match Events</h1>",
@@ -249,7 +253,9 @@ def create_home_page() -> None:
         with col3b:
             for stat_name, home_col, away_col, unit in key_stats:
                 away_val = minute_data[away_col]
-                st.metric(stat_name, f"{away_val:.0f}{unit}")
+                away_val_previous = previous_minute_data[away_col]
+                delta = int(away_val - away_val_previous)
+                st.metric(stat_name, f"{away_val:.0f}{unit}", delta=delta)
 
     col1, col2 = st.columns(2)
     with col1:
