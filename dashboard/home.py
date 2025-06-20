@@ -1,13 +1,9 @@
 """Home page."""
-import altair as alt
-from vega_datasets import data
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-import altair as alt
-from vega_datasets import data
 
-from data import get_match_info_for_selected_match, get_event_data_for_selected_match, get_team_from_match_id
+from data import get_match_info_for_selected_match, get_event_data_for_selected_match
 from timeline import create_timeline_df, create_slider
 from momentum import process_momentum_chart_creation
 
@@ -52,7 +48,9 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
         return selected_minute
 
 
-def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int, radar_stats: list[tuple], categories: list[str], radar_title: str) -> go.Figure:
+def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int,
+                                   radar_stats: list[tuple], categories: list[str],
+                                   radar_title: str) -> go.Figure:
     """Create radar plot for match statistics."""
     data_up_to_minute = timeline_df[timeline_df["match_minute"]
                                     == selected_minute]
@@ -119,7 +117,7 @@ def create_event_buttons(match_events: pd.DataFrame) -> None:
         with cols[i % 3]:
             if team_id == home_team_id:
                 team_name = home_team_name
-            if team_id == away_team_id:
+            elif team_id == away_team_id:
                 team_name = away_team_name
             if event_type == "goal":
                 select_icon = "⚽"
@@ -136,7 +134,8 @@ def create_event_buttons(match_events: pd.DataFrame) -> None:
                 st.rerun()
 
 
-def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int, stat_name: str) -> go.Figure:
+def create_comparison_line_chart(timeline_df: pd.DataFrame,
+                                 selected_minute: int, stat_name: str) -> go.Figure:
     """Compare one stat between home and away."""
     home_col = f"{stat_name.lower()}_home"
     away_col = f"{stat_name.lower()}_away"
@@ -167,7 +166,8 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int
     return fig
 
 
-def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int) -> tuple[pd.DataFrame, list]:
+def create_minute_by_minute_comparison(timeline_df: pd.DataFrame,
+                                       selected_minute: int) -> tuple[pd.DataFrame, list]:
     """Create a minute by minute comparison."""
     current_data = timeline_df[timeline_df["match_minute"] == selected_minute]
     # previous_minute = timeline_df[timeline_df["match_minute"] == (selected_minute - 1)]
@@ -241,11 +241,11 @@ def create_home_page() -> None:
         create_event_buttons(match_events)
 
     with col3:
-        col3aa, col3ab = st.columns([1, 5])
+        _, col3ab = st.columns([1, 5])
         with col3ab:
             st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
                         unsafe_allow_html=True)
-        col3a, col3b = st.columns([3, 1])
+        _, col3b = st.columns([3, 1])
         with col3b:
             for stat_name, home_col, away_col, unit in key_stats:
                 away_val = minute_data[away_col]

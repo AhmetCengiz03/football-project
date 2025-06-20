@@ -8,7 +8,8 @@ from data import (
 )
 
 
-def calculate_score_from_events(match_events: pd.DataFrame, match_info: pd.DataFrame) -> pd.DataFrame:
+def calculate_score_from_events(match_events: pd.DataFrame,
+                                match_info: pd.DataFrame) -> pd.DataFrame:
     """Calculate running score for this match."""
 
     goal_events = match_events[match_events["type_name"] == "goal"]
@@ -41,7 +42,8 @@ def check_all_expected_events_exist(event_pivot: pd.DataFrame) -> None:
             event_pivot[event_type] = 0
 
 
-def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFrame, match_stats: pd.DataFrame) -> pd.DataFrame:
+def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFrame,
+                               match_stats: pd.DataFrame) -> pd.DataFrame:
     """Create a full timeline with all stats at every minute."""
 
     timeline = match_stats.copy()

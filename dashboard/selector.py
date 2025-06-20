@@ -27,8 +27,6 @@ def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     """Create team selection dropdowns."""
     comp_data["matchup"] = comp_data.apply(
         lambda x: f"{x["home_team"]} - {x["away_team"]}", axis=1)
-
-    f"{comp_data["home_team"].iloc[0]} - {comp_data["away_team"].iloc[0]}"
     matches = sorted(comp_data["matchup"].unique())
     selected_match = st.selectbox("Matches", matches, key="matchup")
 
@@ -37,7 +35,8 @@ def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     return found_teams["home_team"].iloc[0], found_teams["away_team"].iloc[0]
 
 
-def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str], away_team: list[str]) -> None:
+def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str],
+                          away_team: list[str]) -> None:
     """Find the match and handle selection."""
 
     matches = comp_data[

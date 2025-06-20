@@ -36,9 +36,7 @@ def display_fixtures() -> None:
         grouped = upcoming_fixtures.groupby("competition_name")
         for competition, comp_games in grouped:
             with st.expander(f"{competition} ({len(comp_games)} games)", expanded=True):
-
                 comp_games_sorted = comp_games.sort_values("match_date")
-
                 for _, game in comp_games_sorted.iterrows():
                     col1, col2 = st.columns(2)
                     with col1:

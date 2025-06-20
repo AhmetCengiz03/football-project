@@ -1,9 +1,9 @@
 """Subscription page."""
-
 import streamlit as st
 
 
-def create_page():
+def create_page() -> None:
+    """Create the page for subscriptions."""
     st.title("Football Summary Subscription")
     with st.form("Subscription Form"):
         st.subheader("Your information")
