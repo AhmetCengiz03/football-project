@@ -1,6 +1,7 @@
 # Dashboard
 
 A dashboard can be run to view visualisations of minute by minute data on football matches.
+To run the dashboard use: streamlit run streamlit_app.py
 
 ## Overview
 
