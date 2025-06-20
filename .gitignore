@@ -103,5 +103,8 @@ __pycache__
 match_*/
 .coverage
 
+.streamlit
+.streamlit/secrets.toml
+.devcontainer
 manual_pipeline.py
 dashboard/.streamlit/secrets.toml

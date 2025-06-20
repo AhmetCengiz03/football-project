@@ -79,3 +79,19 @@ def test_scrape_live_match_scrapes_once_and_is_successful():
     response = scrape_live_match("fixtures", mock_conn)
     assert response == {"match_id": "101010",
                         "fixture_name": "Scotland vs Hungary"}
+
+
+def test_scrape_live_match_handles_error_response():
+
+    mock_conn = MagicMock()
+    mock_response = MagicMock()
+
+    mock_conn.getresponse.return_value = mock_response
+    mock_response.status = 404
+    mock_response.reason = "Not Found"
+
+    response = scrape_live_match("fixtures/invalid", mock_conn)
+
+    assert response["error"]
+    assert response["status"] == 404
+    assert response["reason"] == "Not Found"

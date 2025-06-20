@@ -34,9 +34,9 @@ def delete_scheduler(scheduler: client, schedule_name: str, group_names: list[st
         try:
             scheduler.delete_schedule(Name=schedule_name,
                                       GroupName=group_name)
-            logger.info("Deleted schedule: %s", schedule_name)
+            logger.info("Deleted schedule: %s.", schedule_name)
         except scheduler.exceptions.ResourceNotFoundException:
-            logger.info("Could not find and delete: %s", schedule_name)
+            logger.info("Could not find and delete: %s.", schedule_name)
 
 
 def process_schedule_deletion(config: dict, match_id: int, schedule_prefix: str) -> None:
@@ -58,11 +58,12 @@ def lambda_handler(event, context):
     try:
         load_dotenv()
         logger = getLogger()
-        logger.info("Received event: %s", dumps(event))
+        logger.info("Received event: %s.", dumps(event))
         match_id = event.get("match_id")
 
         if not match_id:
-            raise ValueError("home_team, away_team and match end are required")
+            raise ValueError(
+                "home_team, away_team and match end are required.")
 
         process_schedule_deletion(ENV, match_id, "c17-football")
         return {
@@ -77,7 +78,7 @@ def lambda_handler(event, context):
             "status_code": 500,
             "body": {
                 "error": str(e),
-                "message": "Failed to delete schedule"
+                "message": "Failed to delete schedule."
             }
         }
 

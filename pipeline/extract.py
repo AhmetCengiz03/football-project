@@ -8,13 +8,6 @@ from os import environ as ENV
 
 from dotenv import load_dotenv
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level="INFO",
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S"
-)
-
 
 def scrape_live_match(url: str, conn: HTTPSConnection) -> dict:
     """Returns a dict of scraped information for a specified match."""
@@ -30,10 +23,10 @@ def scrape_live_match(url: str, conn: HTTPSConnection) -> dict:
 
     if res.status == 200:
 
-        logger.info("Got successful response from API: %s", res.status)
+        logging.info("Got successful response from API: %s", res.status)
         return loads(data_str)
 
-    logger.info(
+    logging.info(
         "API Request unsuccessful. Status code: %s. Reason: %s.", res.status, res.reason)
     return {"error": True,
             "status": res.status,
@@ -51,7 +44,7 @@ def build_scrape_url(match_identifier: str | int, token: str) -> str:
         raise TypeError(
             f"{match_identifier} is not a valid string or integer.")
 
-    logger.info("Built url: %s.", url)
+    logging.info("Built url: %s.", url)
     return url
 
 
@@ -72,7 +65,7 @@ def prepare_data(data: dict) -> dict:
     else:
         raise KeyError("data key not in received data.")
 
-    logger.info("Request data successfully stripped of unwanted keys.")
+    logging.info("Request data successfully stripped of unwanted keys.")
     return data
 
 
@@ -91,7 +84,7 @@ def run_extract(match_identifier: str | int,
     else:
         data["request_timestamp"] = now
 
-    logger.info("Data passed off successfully.")
+    logging.info("Data passed off successfully.")
     return data
 
 

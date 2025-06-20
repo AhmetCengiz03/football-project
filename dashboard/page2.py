@@ -1,4 +1,4 @@
-"""Second page test."""
+"""Page on individual team statistics."""
 import streamlit as st
 
-st.write("test")
+st.write("Soon to come")
