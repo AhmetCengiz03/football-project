@@ -1,6 +1,6 @@
 # Pipeline
 
-An ETL pipeline that is can be triggered each minute throughout a match. The data is extracted from the [Sportmonks API](https://www.sportmonks.com/football-api/). Data is then transformed and uploaded into an AWS RDS instance. 
+An ETL pipeline that can be triggered each minute throughout a match. The data is extracted from the [Sportmonks API](https://www.sportmonks.com/football-api/). Data is then transformed and uploaded into an AWS RDS instance. 
 
 ## Overview
 
