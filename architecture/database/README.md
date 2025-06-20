@@ -12,3 +12,5 @@ DB_HOST=[DATABASE HOST]
 ```  
 2) Run `bash setup_db.sh`
 
+#### Entity Relationship Diagram
+![ERD](football_project_erd.png)
