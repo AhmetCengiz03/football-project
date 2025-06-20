@@ -8,7 +8,8 @@ def calculate_momentum_score(timeline_df: pd.DataFrame) -> pd.DataFrame:
     """Calculate momentum scores for both teams based on multiple stats."""
 
     df = timeline_df[["match_minute", "attacks_home", "attacks_away",
-                      "danger_attacks_home", "danger_attacks_away", "shots_home", "shots_away"]].copy()
+                      "danger_attacks_home", "danger_attacks_away",
+                      "shots_home", "shots_away"]].copy()
 
     df["attacks_home_change"] = df["attacks_home"].diff().fillna(0)
     df["attacks_away_change"] = df["attacks_away"].diff().fillna(0)
@@ -20,9 +21,11 @@ def calculate_momentum_score(timeline_df: pd.DataFrame) -> pd.DataFrame:
     window = 5
 
     df["home_activity"] = (df["attacks_home_change"].rolling(window).sum() +
-                           df["danger_home_change"].rolling(window).sum() * 3 + df["shots_home_change"]*2)
+                           df["danger_home_change"].rolling(window).sum()
+                           * 3 + df["shots_home_change"]*2)
     df["away_activity"] = (df["attacks_away_change"].rolling(window).sum() +
-                           df["danger_away_change"].rolling(window).sum() * 3 + df["shots_away_change"]*2)
+                           df["danger_away_change"].rolling(window).sum() *
+                           3 + df["shots_away_change"]*2)
 
     df["momentum"] = df["home_activity"] - df["away_activity"]
 
@@ -35,7 +38,7 @@ def create_momentum_chart(df: pd.DataFrame, selected_minute: int) -> go.Figure:
     fig.add_scatter(
         x=df["match_minute"], y=df["momentum"],
         mode="lines", name="Momentum",
-        line=dict(width=3, color="white")
+        line={"width": 3, "color": 'white'}
     )
     fig.add_scatter(
         x=df["match_minute"],

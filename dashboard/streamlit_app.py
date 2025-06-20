@@ -6,6 +6,7 @@ from selector import create_match_selector
 
 
 def main() -> None:
+    """Main function for generating all pages."""
     load_dotenv()
     st.set_page_config(layout="wide")
     create_match_selector()
@@ -13,12 +14,17 @@ def main() -> None:
     pages = [
         st.Page(
             "home.py",
-            title="home",
-            icon=":material/home:"
+            title="Home",
+            icon=":material/home:",
         ),
         st.Page(
-            "page2.py",
-            title="team analysis",
+            "fixtures.py",
+            title="Fixtures",
+            icon=":material/widgets:"
+        ),
+        st.Page(
+            "subscription.py",
+            title="Subscription",
             icon=":material/widgets:"
         )
     ]

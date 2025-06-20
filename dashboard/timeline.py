@@ -8,7 +8,8 @@ from data import (
 )
 
 
-def calculate_score_from_events(match_events: pd.DataFrame, match_info: pd.DataFrame) -> pd.DataFrame:
+def calculate_score_from_events(match_events: pd.DataFrame,
+                                match_info: pd.DataFrame) -> pd.DataFrame:
     """Calculate running score for this match."""
 
     goal_events = match_events[match_events["type_name"] == "goal"]
@@ -41,7 +42,8 @@ def check_all_expected_events_exist(event_pivot: pd.DataFrame) -> None:
             event_pivot[event_type] = 0
 
 
-def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFrame, match_stats: pd.DataFrame) -> pd.DataFrame:
+def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFrame,
+                               match_stats: pd.DataFrame) -> pd.DataFrame:
     """Create a full timeline with all stats at every minute."""
 
     timeline = match_stats.copy()
@@ -62,6 +64,7 @@ def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFr
         event_pivot, on="match_minute", how="left").fillna(0)
 
     score_data = calculate_score_from_events(match_events, match_info)
+    timeline = timeline.sort_values("match_minute")
 
     if not score_data.empty:
         timeline = timeline.merge(score_data, on="match_minute", how="left")
@@ -72,6 +75,12 @@ def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFr
     else:
         timeline["home_score"] = 0
         timeline["away_score"] = 0
+
+    timeline = timeline.drop_duplicates(
+        subset=["match_minute"], keep="first")
+
+    pd.concat([timeline['shots_home'],
+              timeline['shots_home'].shift()], axis=1).min(axis=1)
 
     return timeline
 
@@ -109,4 +118,4 @@ def create_timeline_df() -> pd.DataFrame:
     st.session_state["match_info"] = match_info
     st.session_state["match_stats"] = match_stats
 
-    return timeline_df.sort_values("match_minute")
+    return timeline_df.sort_values(["match_minute", "half"])
