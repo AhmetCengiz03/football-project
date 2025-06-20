@@ -6,13 +6,6 @@ import logging
 import boto3
 from dotenv import load_dotenv
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level="INFO",
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S"
-)
-
 
 def lambda_handler(event=None, context=None):
     """Lambda function for the creation of goal notifications."""
@@ -24,7 +17,7 @@ def lambda_handler(event=None, context=None):
 
     if not goal_info:
 
-        logger.info("No new goals found.")
+        logging.info("No new goals found.")
         return {
             "status": "No new goals found."
         }
@@ -33,7 +26,7 @@ def lambda_handler(event=None, context=None):
     for goal in goal_info:
 
         goal_message = create_goal_message(goal)
-        logger.info("Created goal message: %s", goal_message)
+        logging.info("Created goal message: %s", goal_message)
 
         response = client.publish(
             TopicArn=ENV["TOPIC_ARN"],
