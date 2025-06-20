@@ -23,7 +23,7 @@ jobs:
         run: |
           pip install -r dashboard/requirements.txt
           pip install -r pipeline/requirements.txt
-          pip install -r pipeline/seed_master_data/requirements.txt
+          pip install -r seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
           pip install -r stop_trigger/requirements.txt
 
@@ -46,7 +46,7 @@ jobs:
         run: |
           pip install -r dashboard/requirements.txt
           pip install -r pipeline/requirements.txt
-          pip install -r pipeline/seed_master_data/requirements.txt
+          pip install -r seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
           pip install -r stop_trigger/requirements.txt
 

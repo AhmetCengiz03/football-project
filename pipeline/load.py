@@ -11,14 +11,6 @@ from psycopg2.extensions import connection
 from transform import get_dataframe_from_json, transform_data
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level="INFO",
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S"
-)
-
-
 def get_connection() -> connection:
     """Get database connection to the PostgreSQL database."""
 
@@ -38,7 +30,7 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
     columns = ", ".join(df.columns)
 
     if df.isnull().any().any():
-        logger.info("DataFrame for table %s found null values.", table_name)
+        logging.info("DataFrame for table %s found null values.", table_name)
         values = []
         for _, row in df.iterrows():
             processed_row = []
@@ -51,7 +43,8 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
                     processed_row.append(item)
             values.append(tuple(processed_row))
     else:
-        logger.info("DataFrame for table %s found no null values.", table_name)
+        logging.info(
+            "DataFrame for table %s found no null values.", table_name)
         values = df.to_records(index=False).tolist()
 
     insert_query = f"INSERT INTO {table_name} ({columns}) VALUES %s"
@@ -67,19 +60,19 @@ def insert_dataframe(df: pd.DataFrame, table_name: str, db_conn: connection,
     try:
         with db_conn.cursor() as cursor:
 
-            logger.info("Running execute_values ...")
+            logging.info("Running execute_values ...")
             execute_values(cursor, insert_query, values)
 
             result = cursor.fetchall() if returning else None
 
             db_conn.commit()
 
-            logger.info("Upload successful.")
+            logging.info("Upload successful.")
             return result
 
     except psycopg2.Error as e:
         db_conn.rollback()
-        logger.error("Error inserting data: %s", e)
+        logging.error("Error inserting data: %s", e)
         return None
 
 
@@ -87,7 +80,7 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
                     event_df: pd.DataFrame = None) -> list[dict]:
     """Upload transformed data to all relevant tables."""
 
-    logger.info("Uploading to match_minute_stats ...")
+    logging.info("Uploading to match_minute_stats ...")
     match_minute_stats_id = insert_dataframe(
         minute_df, "match_minute_stats", db_conn, "match_minute_stats_id")
 
@@ -95,18 +88,18 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
         if isinstance(match_minute_stats_id, list):
             event_df["match_minute_stats_id"] = match_minute_stats_id[0][0]
 
-        match_event_df = event_df[["match_event_id",
-                                   "match_minute_stats_id", "event_type_id", "team_id"]]
+        match_event_df = event_df[[
+            "match_event_id", "match_minute_stats_id", "event_type_id", "team_id"]]
 
         goal_check = get_if_goal_scored_this_run(event_df, db_conn)
 
-        logger.info("Uploading to match_event ...")
+        logging.info("Uploading to match_event ...")
         insert_dataframe(match_event_df, "match_event",
                          db_conn, "match_event_id", "match_event_id")
 
         player_df = get_players_df(event_df)
 
-        logger.info("Uploading to player ...")
+        logging.info("Uploading to player ...")
         insert_dataframe(player_df, "player", db_conn,
                          returning="player_id", conflict="player_id")
 
@@ -117,7 +110,7 @@ def upload_all_data(minute_df: pd.DataFrame, db_conn: connection,
             "related_player_id"].astype(
             float).astype('Int64')
 
-        logger.info("Uploading to player_match_event ...")
+        logging.info("Uploading to player_match_event ...")
         insert_dataframe(player_match_event_df, "player_match_event",
                          db_conn, conflict=["match_event_id", "player_id"])
 
@@ -139,7 +132,7 @@ def get_players_df(event_df: pd.DataFrame):
 
     player_df = players.dropna(subset=["id"]).drop_duplicates(subset=["id"])
 
-    logger.info("Successfully created players dataframe.")
+    logging.info("Successfully created players dataframe.")
     return player_df.rename(
         columns={"id": "player_id", "name": "player_name"})
 
