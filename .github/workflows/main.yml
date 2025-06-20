@@ -26,7 +26,6 @@ jobs:
           pip install -r seed_master_data/requirements.txt
           pip install -r scheduler/requirements.txt
           pip install -r stop_trigger/requirements.txt
-          pip install -r report/requirements.txt
 
 
       - name: Run Pytest
