@@ -79,11 +79,6 @@ def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFr
     timeline = timeline.drop_duplicates(
         subset=["match_minute"], keep="first")
 
-    # timeline["shots_home"] = timeline["shots_home"].expanding().apply(min)
-
-    # tl = timeline["shots_home"].expanding().apply(min)
-    # tl = timeline.drop(columns=['shots_home'])
-
     pd.concat([timeline['shots_home'],
               timeline['shots_home'].shift()], axis=1).min(axis=1)
 
