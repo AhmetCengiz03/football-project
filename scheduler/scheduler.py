@@ -1,7 +1,7 @@
 """Scheduler that runs daily to create schedules for tomorrow's matches."""
 from os import environ as ENV
 from json import loads, dumps
-from logging import getLogger
+import logging
 from http.client import HTTPSConnection
 from datetime import datetime, timedelta, timezone
 
@@ -68,12 +68,11 @@ def get_data_from_fixtures(conn: HTTPSConnection, config: dict) -> list[dict]:
 
 def manage_schedule_groups(scheduler_client: client, current_group: str, schedule_prefix: str) -> None:
     """Create current group and cleanup old ones."""
-    logger = getLogger()
     try:
         scheduler_client.create_schedule_group(Name=current_group)
-        logger.info("Created schedule group: %s", current_group)
+        logging.info("Created schedule group: %s.", current_group)
     except scheduler_client.exceptions.ConflictException:
-        logger.info("Schedule group %s already exists", current_group)
+        logging.info("Schedule group %s already exists.", current_group)
 
     try:
         current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
@@ -91,15 +90,14 @@ def manage_schedule_groups(scheduler_client: client, current_group: str, schedul
                         group_name not in keep_groups):
 
                     scheduler_client.delete_schedule_group(Name=group_name)
-                    logger.info("Deleted old schedule group: %s}", group_name)
+                    logging.info("Deleted old schedule group: %s.}", group_name)
     except Exception as e:
-        logger.error("Error during group cleanup: %s", e)
+        logging.error("Error during group cleanup: %s.", e)
 
 
 def create_match_schedule(scheduler_client: client, match: dict,
                           group_name: str, config: dict, schedule_prefix: str) -> None:
     """Create a single match schedule."""
-    logger = getLogger()
     start_time = datetime.strptime(
         match["start_time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     end_time = start_time + timedelta(hours=3)
@@ -121,10 +119,10 @@ def create_match_schedule(scheduler_client: client, match: dict,
             State='ENABLED',
             Description=f"Schedule for fixture: {match['fixture_name']}"
         )
-        logger.info("Created schedule: %s", schedule_name)
+        logging.info("Created schedule: %s.", schedule_name)
 
     except scheduler_client.exceptions.ConflictException:
-        logger.info("Schedule %s already exists", schedule_name)
+        logging.info("Schedule %s already exists", schedule_name)
 
 
 def process_daily_schedules(config: dict, schedule_prefix: str) -> dict:
@@ -170,4 +168,3 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
     load_dotenv()
     result = process_daily_schedules(ENV, 'c17-football')
-    # print(result["matches"])

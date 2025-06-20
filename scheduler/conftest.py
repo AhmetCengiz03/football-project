@@ -2,8 +2,6 @@
 
 from pytest import fixture
 
-from unittest.mock import MagicMock
-
 
 @fixture
 def sample_fixture_data():
