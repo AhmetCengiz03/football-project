@@ -52,23 +52,12 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
         return selected_minute
 
 
-def create_match_progression_radar_attack(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
+def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int, radar_stats: list[tuple], categories: list[str], radar_title: str) -> go.Figure:
     """Create radar plot for match statistics."""
     data_up_to_minute = timeline_df[timeline_df["match_minute"]
                                     == selected_minute]
 
     minute_data = data_up_to_minute.iloc[-1]
-    # I may calculate averages here? For now it is just the stats for this minute
-
-    radar_stats = [
-        ("shots_home", "shots_away"),
-        ("attacks_home", "attacks_away"),
-        ("possession_home", "possession_away"),
-        ("corners_home", "corners_away"),
-        ("passes_home", "passes_away")
-    ]
-    categories = ["Shots", "Attacks",
-                  "Possession", "Corners", "Passes"]
     home_values = []
     away_values = []
 
@@ -81,6 +70,7 @@ def create_match_progression_radar_attack(timeline_df: pd.DataFrame, selected_mi
         home_values.append(home_scaled)
         away_values.append(away_scaled)
 
+    # Necessary to replot first point, so radar chart line is complete
     home_values.append(home_values[0])
     away_values.append(away_values[0])
     categories.append(categories[0])
@@ -101,72 +91,10 @@ def create_match_progression_radar_attack(timeline_df: pd.DataFrame, selected_mi
         name=st.session_state["away_team"]
     ))
     fig.update_layout(
-        title="Attacking stats",
+        title=radar_title,
         polar=dict(
             radialaxis=dict(
-                visible=True
-            ), bgcolor="rgba(0,0,0,0)"
-
-        ),
-        showlegend=True
-    )
-
-    return fig
-
-
-def create_match_progression_radar_defence(timeline_df: pd.DataFrame, selected_minute: int) -> go.Figure:
-    """Create radar plot for match statistics."""
-    data_up_to_minute = timeline_df[timeline_df["match_minute"]
-                                    == selected_minute]
-
-    minute_data = data_up_to_minute.iloc[-1]
-    # I may calculate averages here? For now it is just the stats for this minute
-
-    radar_stats = [
-        ("saves_home", "saves_away"),
-        ("fouls_home", "fouls_away"),
-        ("tackles_home", "tackles_away"),
-        ("interceptions_home", "interceptions_away"),
-        ("shots_blocked_home", "shots_blocked_away")
-    ]
-    categories = ["Saves", "Fouls", "Tackles",
-                  "Interceptions", "Shots_blocked"]
-    home_values = []
-    away_values = []
-
-    for home_col, away_col in radar_stats:
-        home_val = minute_data[home_col]
-        away_val = minute_data[away_col]
-        max_val = max(home_val, away_val, 1)
-        home_scaled = (home_val/max_val) * 100
-        away_scaled = (away_val/max_val) * 100
-        home_values.append(home_scaled)
-        away_values.append(away_scaled)
-
-    home_values.append(home_values[0])
-    away_values.append(away_values[0])
-    categories.append(categories[0])
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatterpolar(
-        r=home_values,
-        theta=categories,
-        line=dict(color="rgba(0,255,0,1)", width=2),
-        name=st.session_state["home_team"]
-    ))
-
-    fig.add_trace(go.Scatterpolar(
-        r=away_values,
-        theta=categories,
-        line=dict(color="rgba(255,0,0,1)", width=2),
-        name=st.session_state["away_team"]
-    ))
-    fig.update_layout(
-        title='Defensive Stats',
-        polar=dict(
-            radialaxis=dict(
-                visible=True
+                visible=False
             ), bgcolor="rgba(0,0,0,0)"
 
         ),
@@ -178,21 +106,40 @@ def create_match_progression_radar_defence(timeline_df: pd.DataFrame, selected_m
 
 def create_event_buttons(match_events: pd.DataFrame) -> None:
     """Create buttons for all events."""
+    home_team_id = st.session_state["match_info"]["home_team_id"].iloc[0]
+    away_team_id = st.session_state["match_info"]["away_team_id"].iloc[0]
+    home_team_name = st.session_state["match_info"]["home_team_name"].iloc[0]
+    away_team_name = st.session_state["match_info"]["away_team_name"].iloc[0]
     event_data = match_events.sort_values(
-        "match_minute")[["type_name", "match_minute", "player_name"]].values
+        "match_minute")[["type_name", "match_minute", "player_name", "team_id"]]
+    event_data_no_subs = event_data[event_data["type_name"]
+                                    != "substitution"].values
     cols = st.columns(3)
-    for i, (event_type, minute, player_name) in enumerate(event_data):
+    for i, (event_type, minute, player_name, team_id) in enumerate(event_data_no_subs):
         with cols[i % 3]:
-            button_label = f"{minute} | {event_type} | {player_name}"
-            if st.button(button_label, key=f"goal_{i}"):
+            if team_id == home_team_id:
+                team_name = home_team_name
+            if team_id == away_team_id:
+                team_name = away_team_name
+            if event_type == "goal":
+                select_icon = "⚽"
+            elif event_type == "yellowcard":
+                select_icon = "🟨"
+            elif event_type == "redcard":
+                select_icon = "🟥"
+            elif event_type == "substitution":
+                select_icon = "🔄"
+
+            button_label = f"{minute} | {event_type} | {player_name} | {team_name}"
+            if st.button(button_label, key=f"event{i}", icon=select_icon):
                 st.session_state["selected_minute"] = int(minute)
                 st.rerun()
 
 
 def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int, stat_name: str) -> go.Figure:
     """Compare one stat between home and away."""
-    home_col = f"{stat_name}_home"
-    away_col = f"{stat_name}_away"
+    home_col = f"{stat_name.lower()}_home"
+    away_col = f"{stat_name.lower()}_away"
 
     if home_col not in timeline_df.columns or away_col not in timeline_df.columns:
         st.error(f"Stat {stat_name} not available")
@@ -223,30 +170,17 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame, selected_minute: int
 def create_minute_by_minute_comparison(timeline_df: pd.DataFrame, selected_minute: int) -> tuple[pd.DataFrame, list]:
     """Create a minute by minute comparison."""
     current_data = timeline_df[timeline_df["match_minute"] == selected_minute]
+    # previous_minute = timeline_df[timeline_df["match_minute"] == (selected_minute - 1)]
     minute_data = current_data.iloc[0]
     key_stats = [
         ("Possession", "possession_home", "possession_away", "%"),
         ("Shots", "shots_home", "shots_away", ""),
         ("Attacks", "attacks_home", "attacks_away", ""),
-        ("Corners", "corners_home", "corners_away", "")
+        ("Corners", "corners_home", "corners_away", ""),
+        ("Fouls", "fouls_home", "fouls_away", ""),
     ]
 
     return minute_data, key_stats
-
-    with st.container():
-        home, _, away = st.columns([4, 1, 4])
-
-        with home:
-            st.markdown(f"### {st.session_state["home_team"]}")
-            for stat_name, home_col, away_col, unit in key_stats:
-                home_val = minute_data[home_col]
-                st.metric(stat_name, f"{home_val:.0f}{unit}")
-
-        with away:
-            st.markdown(f"### {st.session_state["away_team"]}")
-            for stat_name, home_col, away_col, unit in key_stats:
-                away_val = minute_data[away_col]
-                st.metric(stat_name, f"{away_val:.0f}{unit}")
 
 
 def create_home_page() -> None:
@@ -271,10 +205,29 @@ def create_home_page() -> None:
 
     minute_data, key_stats = create_minute_by_minute_comparison(
         timeline_df, selected_minute)
-    fig_attack = create_match_progression_radar_attack(
-        timeline_df, selected_minute)
-    fig_defence = create_match_progression_radar_defence(
-        timeline_df, selected_minute)
+
+    radar_stats = [
+        ("shots_home", "shots_away"),
+        ("attacks_home", "attacks_away"),
+        ("possession_home", "possession_away"),
+        ("corners_home", "corners_away"),
+        ("passes_home", "passes_away")
+    ]
+    categories = ["Shots", "Attacks",
+                  "Possession", "Corners", "Passes"]
+    fig_attack = create_match_progression_radar(
+        timeline_df, selected_minute, radar_stats, categories, "Attacking stats")
+
+    radar_stats = [
+        ("saves_home", "saves_away"),
+        ("fouls_home", "fouls_away"),
+        ("shots_blocked_home", "shots_blocked_away")
+    ]
+    categories = ["Saves", "Fouls",
+                  "Shots Blocked"]
+
+    fig_defence = create_match_progression_radar(
+        timeline_df, selected_minute, radar_stats, categories, "Defensive Stats")
 
     with col1:
         st.markdown(f"### {st.session_state["home_team"]}")
@@ -282,13 +235,11 @@ def create_home_page() -> None:
             home_val = minute_data[home_col]
             st.metric(stat_name, f"{home_val:.0f}{unit}")
 
-    # Radar chart
     with col2:
         st.markdown("<h3 style='text-align: center'>Match Events</h1>",
                     unsafe_allow_html=True)
         create_event_buttons(match_events)
 
-    # Match events/commentary
     with col3:
         col3aa, col3ab = st.columns([1, 5])
         with col3ab:
@@ -307,13 +258,11 @@ def create_home_page() -> None:
         st.plotly_chart(fig_defence)
 
     stat_name = st.selectbox("Choose a Stat to Compare",
-                             ["shots", "attacks", "possession", "corners", "fouls"])
+                             ["Shots", "Attacks", "Possession", "Corners", "Fouls", "Saves"])
 
     fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
 
     st.plotly_chart(fig)
-
-    st.dataframe(timeline_df)
 
 
 if __name__ == "__main__":

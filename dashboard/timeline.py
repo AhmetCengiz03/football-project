@@ -26,12 +26,9 @@ def calculate_score_from_events(match_events: pd.DataFrame, match_info: pd.DataF
         "is_away_goal": "sum"
     }).reset_index()
 
-    st.dataframe(goals_by_minute)
-
     goals_by_minute["home_score"] = goals_by_minute["is_home_goal"].cumsum()
     goals_by_minute["away_score"] = goals_by_minute["is_away_goal"].cumsum()
 
-    st.dataframe(goals_by_minute)
     return goals_by_minute
 
 
@@ -65,7 +62,6 @@ def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFr
         event_pivot, on="match_minute", how="left").fillna(0)
 
     score_data = calculate_score_from_events(match_events, match_info)
-    st.dataframe(score_data)
     timeline = timeline.sort_values("match_minute")
 
     if not score_data.empty:
@@ -78,7 +74,17 @@ def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFr
         timeline["home_score"] = 0
         timeline["away_score"] = 0
 
-    st.dataframe(timeline)
+    timeline = timeline.drop_duplicates(
+        subset=["match_minute"], keep="first")
+
+    # timeline["shots_home"] = timeline["shots_home"].expanding().apply(min)
+
+    # tl = timeline["shots_home"].expanding().apply(min)
+    # tl = timeline.drop(columns=['shots_home'])
+
+    pd.concat([timeline['shots_home'],
+              timeline['shots_home'].shift()], axis=1).min(axis=1)
+
     return timeline
 
 
@@ -106,10 +112,6 @@ def create_timeline_df() -> pd.DataFrame:
     match_stats = get_all_stats_for_selected_match(
         st.session_state["selected_match_id"])
 
-    st.dataframe(match_events)
-    st.dataframe(match_info)
-    st.dataframe(match_stats)
-
     timeline_df = create_full_match_timeline(
         match_events, match_info, match_stats)
 
@@ -119,4 +121,4 @@ def create_timeline_df() -> pd.DataFrame:
     st.session_state["match_info"] = match_info
     st.session_state["match_stats"] = match_stats
 
-    return timeline_df.sort_values("match_minute")
+    return timeline_df.sort_values(["match_minute", "half"])

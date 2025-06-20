@@ -22,11 +22,6 @@ def main() -> None:
             icon=":material/widgets:"
         ),
         st.Page(
-            "team_statistics.py",
-            title="Team Stats",
-            icon=":material/widgets:"
-        ),
-        st.Page(
             "subscription.py",
             title="Subscription",
             icon=":material/widgets:"

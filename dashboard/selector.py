@@ -25,7 +25,6 @@ def competition_selection_filtering(season_data: pd.DataFrame) -> pd.DataFrame:
 
 def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     """Create team selection dropdowns."""
-    # Works for 1 game in each league at the moment
     comp_data["matchup"] = comp_data.apply(
         lambda x: f"{x["home_team"]} - {x["away_team"]}", axis=1)
 
@@ -36,20 +35,6 @@ def team_selection(comp_data: pd.DataFrame) -> tuple[list[str], list[str]]:
     found_teams = comp_data[comp_data["matchup"] == selected_match]
 
     return found_teams["home_team"].iloc[0], found_teams["away_team"].iloc[0]
-
-    # will change back to this method after demo
-    home_teams = sorted(comp_data["home_team"].unique())
-    away_teams = sorted(comp_data["away_team"].unique())
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        home_team = st.selectbox("Home Team", home_teams, key="home_team")
-
-    with col2:
-        away_team = st.selectbox("Away Team", away_teams, key="away_team")
-
-    return home_team, away_team
 
 
 def find_and_select_match(comp_data: pd.DataFrame, home_team: list[str], away_team: list[str]) -> None:
