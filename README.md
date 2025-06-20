@@ -52,4 +52,4 @@ Note: these are stored in `/architecture`.
 
 Our subdirectories contain their own testing files. If you want to run an overall coverage check, after installing requirements run `pytest --cov`.
 
-<img src="dashboard/playbyplay.png" alt="drawing" width="300"/>
+![Architecture Diagram](dashboard/playbyplay.png)
