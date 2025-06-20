@@ -36,7 +36,7 @@ def lambda_handler(event=None, context=None):
     if df["periods"].map(bool).any():
         minute_df, event_df, flags = transform_data(df)
 
-        if flags["half_live"]:
+        if flags["half_live"] and not flags["game_over"]:
 
             new_goals = upload_all_data(minute_df, db_conn, event_df)
             logger.info("ETL pipeline run successful.")
