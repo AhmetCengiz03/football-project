@@ -5,7 +5,7 @@ A Python script that creates an end of match report using statistics collected t
 ## Overview
 
 ### `report_data.py`
-- This script gathers the required data for the entire report it makes a query to the AWS RDS database and gets the data for the relevant match using the match_id.
+- This script gathers the required data for the entire report. It makes a query to the AWS RDS database and gets the data for the relevant match using the match_id.
 
 ### `report_commentary.py`
 - Using the data gathered from the `report_data.py` script the data is passed into a prompt for Chat GPT 4.1 Nano to analyse the flow of the game, giving an overview for the match, each half and the key events.
@@ -15,7 +15,7 @@ A Python script that creates an end of match report using statistics collected t
 
 
 ### `report.py` 
-- This converts the HTML to PDF. Then connects to the S3 bucket using `boto3` library, and uploads the PDF file. 
+- This converts the HTML to PDF. After, it connects to the S3 bucket using `boto3` library, and uploads the PDF file. 
 
 ## Required Dependencies
 - Create a virtual environment
