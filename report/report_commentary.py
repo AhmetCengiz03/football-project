@@ -35,7 +35,7 @@ class MatchReport(BaseModel):
     final_thoughts: str
 
 
-def get_openai_client(config: dict):
+def get_openai_client(config: dict) -> OpenAI:
     """Get the Open AI client."""
     return OpenAI(
         api_key=config["OPENAI_API_KEY"]
