@@ -1,11 +1,6 @@
-import boto3
-import os
 import logging
 from os import makedirs, environ as ENV
-from os.path import basename, join
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
+from os.path import join
 
 from dotenv import load_dotenv
 from xhtml2pdf import pisa
@@ -48,44 +43,6 @@ def html_to_pdf(html_content: str, output_path: str) -> bool:
         return False
 
 
-def create_email_message(pdf_path: str, match_title: str,
-                         sender_email: str, recipient_email: str) -> MIMEMultipart:
-    """Create email message with PDF attachment."""
-
-    msg = MIMEMultipart('mixed')
-    msg['Subject'] = f"Match Report: {match_title}"
-    msg['From'] = sender_email
-    msg['To'] = recipient_email
-
-    msg_body = MIMEMultipart('alternative')
-    body_text = f"""
-    Dear Football Fan,
-    
-    Please find attached the detailed match report for: {match_title}
-    
-    This comprehensive report includes:
-    - Complete match analysis
-    - Period-by-period breakdown
-    - Key events and player performances
-    - Expert commentary and insights
-    
-    Best regards,
-    PlayByPlay Insights Team
-    """
-
-    textpart = MIMEText(body_text, 'plain')
-    msg_body.attach(textpart)
-    msg.attach(msg_body)
-
-    with open(pdf_path, 'rb') as f:
-        part = MIMEApplication(f.read())
-        part.add_header('Content-Disposition', 'attachment',
-                        filename=basename(pdf_path))
-        msg.attach(part)
-
-    return msg
-
-
 def generate_complete_report(config: dict, match_id: int, output_dir: str,
                              sender_email: str = None, recipient_email: str = None) -> dict[str, str]:
     """Generate complete match report with HTML, PDF, and email."""
@@ -105,45 +62,6 @@ def generate_complete_report(config: dict, match_id: int, output_dir: str,
     if pdf_success:
         upload_file(config, pdf_path, f"reports/{pdf_filename}")
 
-    results = {
-        'pdf_path': pdf_path if pdf_success else None,
-        'report_data': report.model_dump()
-    }
-
-    if sender_email and recipient_email and pdf_success:
-        print("Creating email message...")
-        email_msg = create_email_message(
-            pdf_path, report.match_title, sender_email, recipient_email
-        )
-        results['email_message'] = email_msg.as_string()
-
-    print(f"Report generation complete! Files saved to {output_dir}")
-    return results
-
-
-def send_match_email(emails: list[str], subject: str, body_html: str):
-    """Sends emails to subscribed users."""
-    client = boto3.client('ses', region_name='eu-west-2')
-
-    response = client.send_email(
-        Source=ENV['SES_FROM_EMAIL'],
-        Destination={'ToAddresses': emails},
-        Message={
-            'Subject': {
-                'Data': subject
-            },
-            'Body': {
-                'Text': {
-                    'Data': "HELP"
-                },
-                'Html': {
-                    'Data': body_html
-                },
-            }
-        }
-    )
-    return response
-
 
 def lambda_handler(event, context) -> None:
     """
@@ -152,9 +70,6 @@ def lambda_handler(event, context) -> None:
     Args:
         event: Lambda event data
         context: Lambda context object
-
-    Returns:
-        Dictionary with status code and response body
     """
     load_dotenv()
 
@@ -166,8 +81,6 @@ def lambda_handler(event, context) -> None:
         ENV,
         match_id,
         output_dir="/tmp/reports",
-        sender_email="trainee.ahmet.cengiz@sigmalabs.co.uk",
-        recipient_email="trainee.ahmet.cengiz@sigmalabs.co.uk"
     )
 
 
@@ -180,6 +93,4 @@ if __name__ == "__main__":
         ENV,
         match_id,
         output_dir="reports",
-        sender_email="trainee.ahmet.cengiz@sigmalabs.co.uk",
-        recipient_email="trainee.ahmet.cengiz@sigmalabs.co.uk"
     )
