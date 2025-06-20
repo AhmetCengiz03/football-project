@@ -50,4 +50,6 @@ Note: these are stored in `/architecture`.
 
 ## Testing
 
-Our subdirectories contain their own testing files. If you want to run an overall coverage check, after installing requirements 
+Our subdirectories contain their own testing files. If you want to run an overall coverage check, after installing requirements run `pytest --cov`.
+
+<img src="dashboard/playbyplay.png" alt="drawing" width="300"/>
