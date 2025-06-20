@@ -12,7 +12,7 @@ A solution to the current gap in how football matches are reviewed and analysed,
 ## Setup
 
 1) To begin setup of the project, navigate to the `/architecture` subdirectory and follow the steps in the README.
-2) Navigate to `/X` and follow the steps in the README to create the schema.
+2) Navigate to `/pipeline` and create an `.env` as instructed in the README.
 3) Navigate to `/architecture` and run the following bash commands to push Docker images to the different ECR's:
 - `bash push_ecr_pipeline.sh`
 - `bash push_ecr_scheduler.sh`
@@ -26,9 +26,6 @@ A solution to the current gap in how football matches are reviewed and analysed,
 
 #### System architecture diagram:
 ![Architecture Diagram](architecture/architecture_diagram.png)
-
-#### Entity Relationship Diagram
-![ERD](architecture/database/football_project_erd.png)
 
 Note: these are stored in `/architecture`.
   
@@ -44,9 +41,13 @@ Note: these are stored in `/architecture`.
 ## Technology
 
 - Python - boto3, pandas, psycopg2, streamlit, pylint, pytest
-- AWS - ECR, ECS, S3, Step Functions, EventBridge, SNS, Lambda Functions, RDS,
+- AWS - S3, Step Functions, EventBridge, SNS, Lambda Functions, RDS
 - Docker
 - Terraform
-- Microsoft SQL Server
-- Streamlit
+- PostgreSQL
+- Streamlit - Streamlit Community Cloud
 - CI/CD
+
+## Testing
+
+Our subdirectories contain their own testing files. If you want to run an overall coverage check, after installing requirements 

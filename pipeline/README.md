@@ -5,7 +5,7 @@ An ETL pipeline that can be triggered each minute throughout a match. The data i
 ## Overview
 
 ### `extract.py`
-- Connects to the API, extracts `statistics`, `periods` and `events` data from the `livescores` end point. Removes unnecessary keys to avoid collecting redundant data and passes this. 
+- Connects to the API, extracts `statistics`, `periods` and `events` data from the `fixtures` end point. Removes unnecessary keys to avoid collecting redundant data and passes this on to `transform.py`. 
 
 
 ## Required Dependencies
@@ -31,7 +31,7 @@ DB_NAME=<DATABASE_NAME>
 DB_PASS=<DATABASE_PASSWORD>
 DB_PORT=<DATABASE_PORT>
 DB_USER=<DATABASE_USERNAME>
-TOKEN=<SPORTMONKS API TOKEN?
+TOKEN=<SPORTMONKS API TOKEN>
 ```
 
 ## Files
@@ -46,6 +46,7 @@ This is pulled in inside `transform.py` to build the mapping to relate these to 
 This file is used for scraping a live game to a series of json files.
 They will be saved in a newly created subdirectory `match_{match_id}/`.
 To start the process, simply run the script and change the `identify_match` variable to have a value matching the `match_id` from the api, or alternatively a team name (preference is to use match_id - it is more robust).
+This is useful if you're planning to do DB wipes, and want backups of the live game snapshots.
 
 ## AWS Lambda Deployment
 
