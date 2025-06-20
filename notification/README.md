@@ -1,6 +1,6 @@
-# Reporting
+# Notification
 
-This subdirectory is for handling the creation of our game report output, and sns goal notifications.
+This subdirectory is for handling the creation of our sns goal notifications.
 
 ## Setup
 
