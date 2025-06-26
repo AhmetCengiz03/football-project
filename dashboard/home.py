@@ -45,7 +45,7 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
             st.markdown(f"<h1 style='text-align: center'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
-        return selected_minute
+    return selected_minute
 
 
 def get_rolling_sum_for_radar(timeline_df: pd.DataFrame, selected_minute: int, radar_stats: list[tuple]) -> pd.Series:
@@ -215,17 +215,14 @@ def create_home_page() -> None:
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
     # Game momentum/pressure chart
+    with st.expander("Momentum Chart", expanded=True):
+        momentum_chart = process_momentum_chart_creation(
+            timeline_df, selected_minute)
 
-    momentum_chart = process_momentum_chart_creation(
-        timeline_df, selected_minute)
-
-    st.plotly_chart(momentum_chart)
-
-    col1, col2, col3 = st.columns(3)
+        st.plotly_chart(momentum_chart)
 
     minute_data, key_stats, previous_minute_data = create_minute_by_minute_comparison(
         timeline_df, selected_minute)
-
     radar_stats = [
         ("shots_home", "shots_away"),
         ("attacks_home", "attacks_away"),
@@ -249,44 +246,49 @@ def create_home_page() -> None:
     fig_defence = create_match_progression_radar(
         timeline_df, selected_minute, radar_stats, categories, "Defensive Stats")
 
-    with col1:
-        st.markdown(f"### {st.session_state["home_team"]}")
-        for stat_name, home_col, _, unit in key_stats:
-            home_val = minute_data[home_col]
-            home_val_previous = previous_minute_data[home_col]
-            delta = int(home_val - home_val_previous)
-            st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
+    with st.expander("Events"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(f"### {st.session_state["home_team"]}")
+            for stat_name, home_col, _, unit in key_stats:
+                home_val = minute_data[home_col]
+                home_val_previous = previous_minute_data[home_col]
+                delta = int(home_val - home_val_previous)
+                st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
 
-    with col2:
-        st.markdown("<h3 style='text-align: center'>Match Events</h1>",
-                    unsafe_allow_html=True)
-        create_event_buttons(match_events)
-
-    with col3:
-        _, col3ab = st.columns([1, 5])
-        with col3ab:
-            st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
+        with col2:
+            st.markdown("<h3 style='text-align: center'>Match Events</h1>",
                         unsafe_allow_html=True)
-        _, col3b = st.columns([3, 1])
-        with col3b:
-            for stat_name, home_col, away_col, unit in key_stats:
-                away_val = minute_data[away_col]
-                away_val_previous = previous_minute_data[away_col]
-                delta = int(away_val - away_val_previous)
-                st.metric(stat_name, f"{away_val:.0f}{unit}", delta=delta)
+            create_event_buttons(match_events)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(fig_attack)
-    with col2:
-        st.plotly_chart(fig_defence)
+        with col3:
+            _, col3ab = st.columns([1, 5])
+            with col3ab:
+                st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
+                            unsafe_allow_html=True)
+            _, col3b = st.columns([3, 1])
+            with col3b:
+                for stat_name, home_col, away_col, unit in key_stats:
+                    away_val = minute_data[away_col]
+                    away_val_previous = previous_minute_data[away_col]
+                    delta = int(away_val - away_val_previous)
+                    st.metric(stat_name, f"{away_val:.0f}{unit}", delta=delta)
 
-    stat_name = st.selectbox("Choose a Stat to Compare",
-                             ["Shots", "Attacks", "Possession", "Corners", "Fouls", "Saves"])
+    with st.expander("Radar Charts", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_attack)
+        with col2:
+            st.plotly_chart(fig_defence)
 
-    fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
+    with st.expander("Line Charts", expanded=True):
+        stat_name = st.selectbox("Choose a Stat to Compare",
+                                 ["Shots", "Attacks", "Possession", "Corners", "Fouls", "Saves"])
 
-    st.plotly_chart(fig)
+        fig = create_comparison_line_chart(
+            timeline_df, selected_minute, stat_name)
+
+        st.plotly_chart(fig)
 
 
 if __name__ == "__main__":

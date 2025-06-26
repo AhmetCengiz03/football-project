@@ -88,7 +88,6 @@ def create_full_match_timeline(match_events: pd.DataFrame, match_info: pd.DataFr
 def create_slider(timeline_df: pd.DataFrame) -> st.slider:
     """Create streamlit slider on dashboard."""
     max_minute = int(timeline_df["match_minute"].max())
-    st.subheader("Match Timeline")
     selected_minute = st.slider(
         "Select Match Minute",
         min_value=1,
