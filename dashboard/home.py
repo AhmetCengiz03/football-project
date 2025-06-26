@@ -2,6 +2,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import altair as alt
 
 from data import get_match_info_for_selected_match, get_event_data_for_selected_match
 from timeline import create_timeline_df, create_slider
@@ -45,24 +46,42 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
             st.markdown(f"<h1 style='text-align: center'> {st.session_state["away_team"]} </h1>",
                         unsafe_allow_html=True)
 
-        return selected_minute
+    return selected_minute
+
+
+def get_rolling_sum_for_radar(timeline_df: pd.DataFrame, selected_minute: int, radar_stats: list[tuple]) -> pd.Series:
+    """Gets the rolling sum within a specified window."""
+    stat_columns = [col for home_col,
+                    away_col in radar_stats for col in [home_col, away_col]]
+    df = timeline_df.copy()
+    window = 10
+    for col in stat_columns:
+        df[f"{col}_change"] = df[col].diff().fillna(0)
+
+    for col in stat_columns:
+        df[f"{col}_rolling"] = df[f"{col}_change"].rolling(window).sum()
+
+    selected_data = df[df["match_minute"] == selected_minute]
+
+    minute_data = selected_data.iloc[0]
+
+    return minute_data
 
 
 def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int,
                                    radar_stats: list[tuple], categories: list[str],
                                    radar_title: str) -> go.Figure:
     """Create radar plot for match statistics."""
-    data_up_to_minute = timeline_df[timeline_df["match_minute"]
-                                    == selected_minute]
 
-    minute_data = data_up_to_minute.iloc[-1]
+    minute_data = get_rolling_sum_for_radar(
+        timeline_df, selected_minute, radar_stats)
     home_values = []
     away_values = []
 
     for home_col, away_col in radar_stats:
-        home_val = minute_data[home_col]
-        away_val = minute_data[away_col]
-        max_val = max(home_val, away_val, 1)
+        home_val = minute_data[f"{home_col}_rolling"]
+        away_val = minute_data[f"{away_col}_rolling"]
+        max_val = max(home_val+away_val, 1)
         home_scaled = (home_val/max_val) * 100
         away_scaled = (away_val/max_val) * 100
         home_values.append(home_scaled)
@@ -184,6 +203,45 @@ def create_minute_by_minute_comparison(timeline_df: pd.DataFrame,
 
     return minute_data, key_stats, previous_minute_data
 
+def create_bar_chart():
+    stat_rows = []
+    for stat_name, home_col, awaycol,  in key_stats:
+        home_val = minute_data[home_col]
+        if stat_name == "Possession":
+            away_val = 100 - home_val
+        else:
+            away_val = minute_data[away_col]
+        total = home_val + away_val if (home_val + away_val) > 0 else 1
+        stat_rows.append({
+            'Stat': stat_name,
+            'Team': st.session_state["home_team"],
+            'Value': home_val,
+            'Proportion': home_val / total,
+        })
+        stat_rows.append({
+            'Stat': stat_name,
+            'Team': st.session_state["away_team"],
+            'Value': away_val,
+            'Proportion': away_val / total,
+        })
+    stat_df = pd.DataFrame(stat_rows)
+
+    bar_chart = alt.Chart(stat_df).mark_bar().encode(
+        x=alt.X('Proportion:Q', stack='normalize', axis=alt.Axis(format='%')),
+        y=alt.Y('Stat:N', sort=None, title=None),
+        color=alt.Color('Team:N', scale=alt.Scale(
+            range=['#00FF00', '#FF0000'])),
+        tooltip=[
+            alt.Tooltip('Team:N'),
+            alt.Tooltip('Value:Q', format='.0f'),
+        ]
+    ).properties(
+        width='container',
+        height=250
+    )
+
+    st.altair_chart(bar_chart, use_container_width=True)
+
 
 def create_home_page() -> None:
     """Main function to create the home page."""
@@ -197,17 +255,14 @@ def create_home_page() -> None:
     col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
     # Game momentum/pressure chart
+    with st.expander("Momentum Chart", expanded=True):
+        momentum_chart = process_momentum_chart_creation(
+            timeline_df, selected_minute)
 
-    momentum_chart = process_momentum_chart_creation(
-        timeline_df, selected_minute)
-
-    st.plotly_chart(momentum_chart)
-
-    col1, col2, col3 = st.columns(3)
+        st.plotly_chart(momentum_chart)
 
     minute_data, key_stats, previous_minute_data = create_minute_by_minute_comparison(
         timeline_df, selected_minute)
-
     radar_stats = [
         ("shots_home", "shots_away"),
         ("attacks_home", "attacks_away"),
@@ -231,44 +286,52 @@ def create_home_page() -> None:
     fig_defence = create_match_progression_radar(
         timeline_df, selected_minute, radar_stats, categories, "Defensive Stats")
 
-    with col1:
-        st.markdown(f"### {st.session_state["home_team"]}")
-        for stat_name, home_col, _, unit in key_stats:
-            home_val = minute_data[home_col]
-            home_val_previous = previous_minute_data[home_col]
-            delta = int(home_val - home_val_previous)
-            st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
+    with st.expander("Events", expanded=True):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(f"### {st.session_state["home_team"]}")
+            for stat_name, home_col, _, unit in key_stats:
+                home_val = minute_data[home_col]
+                home_val_previous = previous_minute_data[home_col]
+                delta = int(home_val - home_val_previous)
+                st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
+            
 
-    with col2:
-        st.markdown("<h3 style='text-align: center'>Match Events</h1>",
-                    unsafe_allow_html=True)
-        create_event_buttons(match_events)
-
-    with col3:
-        _, col3ab = st.columns([1, 5])
-        with col3ab:
-            st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
+        with col2:
+            st.markdown("<h3 style='text-align: center'>Match Events</h1>",
                         unsafe_allow_html=True)
-        _, col3b = st.columns([3, 1])
-        with col3b:
-            for stat_name, home_col, away_col, unit in key_stats:
-                away_val = minute_data[away_col]
-                away_val_previous = previous_minute_data[away_col]
-                delta = int(away_val - away_val_previous)
-                st.metric(stat_name, f"{away_val:.0f}{unit}", delta=delta)
+            create_event_buttons(match_events)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(fig_attack)
-    with col2:
-        st.plotly_chart(fig_defence)
+        with col3:
+            _, col3ab = st.columns([1, 5])
+            with col3ab:
+                st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
+                            unsafe_allow_html=True)
+            _, col3b = st.columns([3, 1])
+            with col3b:
+                for stat_name, home_col, away_col, unit in key_stats:
+                    away_val = minute_data[away_col]
+                    away_val_previous = previous_minute_data[away_col]
+                    delta = int(away_val - away_val_previous)
+                    st.metric(stat_name, f"{away_val:.0f}{unit}", delta=delta)
 
-    stat_name = st.selectbox("Choose a Stat to Compare",
-                             ["Shots", "Attacks", "Possession", "Corners", "Fouls", "Saves"])
+    with st.expander("Radar Charts", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(fig_attack)
+        with col2:
+            st.plotly_chart(fig_defence)
 
-    fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
+    with st.expander("Line Charts", expanded=True):
+        stat_name = st.selectbox("Choose a Stat to Compare",
+                                 ["Shots", "Attacks", "Possession", "Corners", "Fouls", "Saves"])
 
-    st.plotly_chart(fig)
+        fig = create_comparison_line_chart(
+            timeline_df, selected_minute, stat_name)
+
+        st.plotly_chart(fig)
+
+
 
 
 if __name__ == "__main__":

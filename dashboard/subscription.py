@@ -10,7 +10,7 @@ def create_page() -> None:
         email = st.text_input(
             "Email Address", placeholder="your.email@example.com")
 
-        reports = st.checkbox("Subscribe to reports")
+        reports = st.checkbox("Subscribe to Goal Notifications")
 
         submitted = st.form_submit_button("Subscribe Now")
 
