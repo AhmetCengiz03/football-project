@@ -2,6 +2,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import altair as alt
 
 from data import get_match_info_for_selected_match, get_event_data_for_selected_match
 from timeline import create_timeline_df, create_slider
@@ -53,7 +54,7 @@ def get_rolling_sum_for_radar(timeline_df: pd.DataFrame, selected_minute: int, r
     stat_columns = [col for home_col,
                     away_col in radar_stats for col in [home_col, away_col]]
     df = timeline_df.copy()
-    window = 15
+    window = 10
     for col in stat_columns:
         df[f"{col}_change"] = df[col].diff().fillna(0)
 
@@ -80,7 +81,7 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
     for home_col, away_col in radar_stats:
         home_val = minute_data[f"{home_col}_rolling"]
         away_val = minute_data[f"{away_col}_rolling"]
-        max_val = max(home_val, away_val, 1)
+        max_val = max(home_val+away_val, 1)
         home_scaled = (home_val/max_val) * 100
         away_scaled = (away_val/max_val) * 100
         home_values.append(home_scaled)
@@ -202,6 +203,45 @@ def create_minute_by_minute_comparison(timeline_df: pd.DataFrame,
 
     return minute_data, key_stats, previous_minute_data
 
+def create_bar_chart():
+    stat_rows = []
+    for stat_name, home_col, awaycol,  in key_stats:
+        home_val = minute_data[home_col]
+        if stat_name == "Possession":
+            away_val = 100 - home_val
+        else:
+            away_val = minute_data[away_col]
+        total = home_val + away_val if (home_val + away_val) > 0 else 1
+        stat_rows.append({
+            'Stat': stat_name,
+            'Team': st.session_state["home_team"],
+            'Value': home_val,
+            'Proportion': home_val / total,
+        })
+        stat_rows.append({
+            'Stat': stat_name,
+            'Team': st.session_state["away_team"],
+            'Value': away_val,
+            'Proportion': away_val / total,
+        })
+    stat_df = pd.DataFrame(stat_rows)
+
+    bar_chart = alt.Chart(stat_df).mark_bar().encode(
+        x=alt.X('Proportion:Q', stack='normalize', axis=alt.Axis(format='%')),
+        y=alt.Y('Stat:N', sort=None, title=None),
+        color=alt.Color('Team:N', scale=alt.Scale(
+            range=['#00FF00', '#FF0000'])),
+        tooltip=[
+            alt.Tooltip('Team:N'),
+            alt.Tooltip('Value:Q', format='.0f'),
+        ]
+    ).properties(
+        width='container',
+        height=250
+    )
+
+    st.altair_chart(bar_chart, use_container_width=True)
+
 
 def create_home_page() -> None:
     """Main function to create the home page."""
@@ -246,7 +286,7 @@ def create_home_page() -> None:
     fig_defence = create_match_progression_radar(
         timeline_df, selected_minute, radar_stats, categories, "Defensive Stats")
 
-    with st.expander("Events"):
+    with st.expander("Events", expanded=True):
         col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown(f"### {st.session_state["home_team"]}")
@@ -255,6 +295,7 @@ def create_home_page() -> None:
                 home_val_previous = previous_minute_data[home_col]
                 delta = int(home_val - home_val_previous)
                 st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
+            
 
         with col2:
             st.markdown("<h3 style='text-align: center'>Match Events</h1>",
@@ -289,6 +330,8 @@ def create_home_page() -> None:
             timeline_df, selected_minute, stat_name)
 
         st.plotly_chart(fig)
+
+
 
 
 if __name__ == "__main__":
