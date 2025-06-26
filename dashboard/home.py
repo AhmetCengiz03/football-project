@@ -79,14 +79,14 @@ def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: i
     fig.add_trace(go.Scatterpolar(
         r=home_values,
         theta=categories,
-        line=dict(color="rgba(0,255,0,1)", width=2),
+        line=dict(color="rgba(0,130,0,1)", width=2),
         name=st.session_state["home_team"]
     ))
 
     fig.add_trace(go.Scatterpolar(
         r=away_values,
         theta=categories,
-        line=dict(color="rgba(255,0,0,1)", width=2),
+        line=dict(color="rgba(130,0,0,1)", width=2),
         name=st.session_state["away_team"]
     ))
     fig.update_layout(
@@ -129,7 +129,7 @@ def create_event_buttons(match_events: pd.DataFrame) -> None:
             elif event_type == "substitution":
                 select_icon = "🔄"
 
-            button_label = f"{minute} | {event_type} | {player_name} | {team_name}"
+            button_label = f"{minute} | {event_type.capitalize()} | {player_name} | {team_name}"
             if st.button(button_label, key=f"event{i}", icon=select_icon):
                 st.session_state["selected_minute"] = int(minute)
                 st.rerun()
@@ -152,7 +152,7 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame,
         y=timeline_df[home_col],
         mode="lines+markers",
         name=st.session_state["home_team"],
-        line=dict(color="rgba(0,255,0,1)", width=4),
+        line=dict(color="rgba(0,130,0,1)", width=4),
     ))
 
     fig.add_trace(go.Scatter(
@@ -160,7 +160,7 @@ def create_comparison_line_chart(timeline_df: pd.DataFrame,
         y=timeline_df[away_col],
         mode="lines+markers",
         name=st.session_state["away_team"],
-        line=dict(color="rgba(255,0,0,1)", width=4),
+        line=dict(color="rgba(130,0,0,1)", width=4),
     ))
     fig.add_vline(x=selected_minute, line_dash="dash", line_color="white")
 
@@ -204,7 +204,7 @@ def create_home_page() -> None:
 
     st.plotly_chart(momentum_chart)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns([1, 5, 1])
 
     minute_data, key_stats, previous_minute_data = create_minute_by_minute_comparison(
         timeline_df, selected_minute)
@@ -231,32 +231,59 @@ def create_home_page() -> None:
 
     fig_defence = create_match_progression_radar(
         timeline_df, selected_minute, radar_stats, categories, "Defensive Stats")
-
     with col1:
         st.markdown(f"### {st.session_state["home_team"]}")
-        for stat_name, home_col, _, unit in key_stats:
-            home_val = minute_data[home_col]
-            home_val_previous = previous_minute_data[home_col]
-            delta = int(home_val - home_val_previous)
-            st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
-
     with col2:
-        st.markdown("<h3 style='text-align: center'>Match Events</h1>",
-                    unsafe_allow_html=True)
-        create_event_buttons(match_events)
-
+        st.markdown("#")
     with col3:
         _, col3ab = st.columns([1, 5])
         with col3ab:
             st.markdown(f"<h3 style='text-align: right'>{st.session_state["away_team"]}</h1>",
                         unsafe_allow_html=True)
-        _, col3b = st.columns([3, 1])
-        with col3b:
-            for stat_name, home_col, away_col, unit in key_stats:
+    for stat_name, home_col, away_col, unit in key_stats:
+        with col1:
+            home_val = minute_data[home_col]
+            home_val_previous = previous_minute_data[home_col]
+            delta = int(home_val - home_val_previous)
+            st.metric(stat_name, f"{home_val:.0f}{unit}", delta=delta)
+
+        with col2:
+            home_val = minute_data[home_col]
+            away_val = minute_data[away_col]
+            total = home_val + away_val if (home_val + away_val) > 0 else 1
+
+            stat_df = pd.DataFrame([
+                {'Team': st.session_state['home_team'], 'Proportion': home_val /
+                    total, 'Value': home_val, 'Unit': unit},
+                {'Team': st.session_state['away_team'],
+                    'Proportion': away_val / total, 'Value': away_val, 'Unit': unit}
+            ])
+            bar_chart = alt.Chart(stat_df).mark_bar().encode(
+                x=alt.X('Proportion:Q', stack='normalize', axis=None),
+                y=alt.value(20),
+                color=alt.Color('Team:N', scale=alt.Scale(
+                    range=["#1aff004f", "#FF0D0050"]), legend=None),
+                tooltip=[
+                    alt.Tooltip('Team:N'),
+                    alt.Tooltip('Value:Q', format='.0f')
+                ]
+            ).properties(
+                width='container',
+                height=75
+            )
+            st.altair_chart(bar_chart, use_container_width=True)
+
+        with col3:
+            _, col3b = st.columns([1, 2])
+            with col3b:
                 away_val = minute_data[away_col]
                 away_val_previous = previous_minute_data[away_col]
                 delta = int(away_val - away_val_previous)
                 st.metric(stat_name, f"{away_val:.0f}{unit}", delta=delta)
+
+    st.markdown("<h3 style='text-align: center'>Match Events</h1>",
+                unsafe_allow_html=True)
+    create_event_buttons(match_events)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -270,41 +297,6 @@ def create_home_page() -> None:
     fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
 
     st.plotly_chart(fig)
-
-    stat_rows = []
-    for stat_name, home_col, away_col, _ in key_stats:
-        home_val = minute_data[home_col]
-        away_val = minute_data[away_col]
-        total = home_val + away_val if (home_val + away_val) > 0 else 1
-        stat_rows.append({
-            'Stat': stat_name,
-            'Team': st.session_state["home_team"],
-            'Value': home_val,
-            'Proportion': home_val / total,
-        })
-        stat_rows.append({
-            'Stat': stat_name,
-            'Team': st.session_state["away_team"],
-            'Value': away_val,
-            'Proportion': away_val / total,
-        })
-    stat_df = pd.DataFrame(stat_rows)
-
-    bar_chart = alt.Chart(stat_df).mark_bar().encode(
-        x=alt.X('Proportion:Q', stack='normalize', axis=alt.Axis(format='%')),
-        y=alt.Y('Stat:N', sort=None, title=None),
-        color=alt.Color('Team:N', scale=alt.Scale(
-            range=['#00FF00', '#FF0000'])),
-        tooltip=[
-            alt.Tooltip('Team:N'),
-            alt.Tooltip('Value:Q', format='.0f'),
-        ]
-    ).properties(
-        width='container',
-        height=250
-    )
-
-    st.altair_chart(bar_chart, use_container_width=True)
 
 
 if __name__ == "__main__":
