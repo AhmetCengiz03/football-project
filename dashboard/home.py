@@ -48,20 +48,38 @@ def create_top_bar(timeline_df: pd.DataFrame) -> st.slider:
         return selected_minute
 
 
+def get_rolling_sum_for_radar(timeline_df: pd.DataFrame, selected_minute: int, radar_stats: list[tuple]) -> pd.Series:
+    """Gets the rolling sum within a specified window."""
+    stat_columns = [col for home_col,
+                    away_col in radar_stats for col in [home_col, away_col]]
+    df = timeline_df.copy()
+    window = 15
+    for col in stat_columns:
+        df[f"{col}_change"] = df[col].diff().fillna(0)
+
+    for col in stat_columns:
+        df[f"{col}_rolling"] = df[f"{col}_change"].rolling(window).sum()
+
+    selected_data = df[df["match_minute"] == selected_minute]
+
+    minute_data = selected_data.iloc[0]
+
+    return minute_data
+
+
 def create_match_progression_radar(timeline_df: pd.DataFrame, selected_minute: int,
                                    radar_stats: list[tuple], categories: list[str],
                                    radar_title: str) -> go.Figure:
     """Create radar plot for match statistics."""
-    data_up_to_minute = timeline_df[timeline_df["match_minute"]
-                                    == selected_minute]
 
-    minute_data = data_up_to_minute.iloc[-1]
+    minute_data = get_rolling_sum_for_radar(
+        timeline_df, selected_minute, radar_stats)
     home_values = []
     away_values = []
 
     for home_col, away_col in radar_stats:
-        home_val = minute_data[home_col]
-        away_val = minute_data[away_col]
+        home_val = minute_data[f"{home_col}_rolling"]
+        away_val = minute_data[f"{away_col}_rolling"]
         max_val = max(home_val, away_val, 1)
         home_scaled = (home_val/max_val) * 100
         away_scaled = (away_val/max_val) * 100
