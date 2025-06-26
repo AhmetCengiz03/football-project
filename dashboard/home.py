@@ -2,6 +2,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import altair as alt
 
 from data import get_match_info_for_selected_match, get_event_data_for_selected_match
 from timeline import create_timeline_df, create_slider
@@ -269,6 +270,41 @@ def create_home_page() -> None:
     fig = create_comparison_line_chart(timeline_df, selected_minute, stat_name)
 
     st.plotly_chart(fig)
+
+    stat_rows = []
+    for stat_name, home_col, away_col, _ in key_stats:
+        home_val = minute_data[home_col]
+        away_val = minute_data[away_col]
+        total = home_val + away_val if (home_val + away_val) > 0 else 1
+        stat_rows.append({
+            'Stat': stat_name,
+            'Team': st.session_state["home_team"],
+            'Value': home_val,
+            'Proportion': home_val / total,
+        })
+        stat_rows.append({
+            'Stat': stat_name,
+            'Team': st.session_state["away_team"],
+            'Value': away_val,
+            'Proportion': away_val / total,
+        })
+    stat_df = pd.DataFrame(stat_rows)
+
+    bar_chart = alt.Chart(stat_df).mark_bar().encode(
+        x=alt.X('Proportion:Q', stack='normalize', axis=alt.Axis(format='%')),
+        y=alt.Y('Stat:N', sort=None, title=None),
+        color=alt.Color('Team:N', scale=alt.Scale(
+            range=['#00FF00', '#FF0000'])),
+        tooltip=[
+            alt.Tooltip('Team:N'),
+            alt.Tooltip('Value:Q', format='.0f'),
+        ]
+    ).properties(
+        width='container',
+        height=250
+    )
+
+    st.altair_chart(bar_chart, use_container_width=True)
 
 
 if __name__ == "__main__":

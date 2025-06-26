@@ -43,8 +43,7 @@ def html_to_pdf(html_content: str, output_path: str) -> bool:
         return False
 
 
-def generate_complete_report(config: dict, match_id: int, output_dir: str,
-                             sender_email: str = None, recipient_email: str = None) -> dict[str, str]:
+def generate_complete_report(config: dict, match_id: int, output_dir: str) -> dict[str, str]:
     """Generate complete match report with HTML, PDF, and email."""
 
     makedirs(output_dir, exist_ok=True)
