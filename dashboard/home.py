@@ -205,46 +205,6 @@ def create_minute_by_minute_comparison(timeline_df: pd.DataFrame,
     return minute_data, key_stats, previous_minute_data
 
 
-def create_bar_chart():
-    stat_rows = []
-    for stat_name, home_col, awaycol, in key_stats:
-        home_val = minute_data[home_col]
-        if stat_name == "Possession":
-            away_val = 100 - home_val
-        else:
-            away_val = minute_data[away_col]
-        total = home_val + away_val if (home_val + away_val) > 0 else 1
-        stat_rows.append({
-            'Stat': stat_name,
-            'Team': st.session_state["home_team"],
-            'Value': home_val,
-            'Proportion': home_val / total,
-        })
-        stat_rows.append({
-            'Stat': stat_name,
-            'Team': st.session_state["away_team"],
-            'Value': away_val,
-            'Proportion': away_val / total,
-        })
-    stat_df = pd.DataFrame(stat_rows)
-
-    bar_chart = alt.Chart(stat_df).mark_bar().encode(
-        x=alt.X('Proportion:Q', stack='normalize', axis=alt.Axis(format='%')),
-        y=alt.Y('Stat:N', sort=None, title=None),
-        color=alt.Color('Team:N', scale=alt.Scale(
-            range=['#00FF00', '#FF0000'])),
-        tooltip=[
-            alt.Tooltip('Team:N'),
-            alt.Tooltip('Value:Q', format='.0f'),
-        ]
-    ).properties(
-        width='container',
-        height=250
-    )
-
-    st.altair_chart(bar_chart, use_container_width=True)
-
-
 def create_home_page() -> None:
     """Main function to create the home page."""
     timeline_df = create_timeline_df()
@@ -286,7 +246,7 @@ def create_home_page() -> None:
 
     fig_defence = create_match_progression_radar(
         timeline_df, selected_minute, radar_stats, categories, "Defensive Stats")
-    with st.expander("Events", expanded=True):
+    with st.expander("## Events", expanded=True):
         col1, col2, col3 = st.columns([1, 5, 1])
 
         with col1:
@@ -320,7 +280,7 @@ def create_home_page() -> None:
                     x=alt.X('Proportion:Q', stack='normalize', axis=None),
                     y=alt.value(20),
                     color=alt.Color('Team:N', scale=alt.Scale(
-                        range=["#1aff004f", "#FF0D0050"]), legend=None),
+                        range=["#1aff0074", "#FF0D008D"]), legend=None),
                     tooltip=[
                         alt.Tooltip('Team:N'),
                         alt.Tooltip('Value:Q', format='.0f')
@@ -363,8 +323,8 @@ def create_home_page() -> None:
 if __name__ == "__main__":
     hide_expander_border = """
     <style>
-        ul.streamlit-expander {
-            border: none !important;
+    [data-testid="stExpander"] details {
+        border-style: none;
         }
     </style>
     """
